@@ -204,6 +204,42 @@
       fill: #000000;
     }
 
+    .hover-pic {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .hover-pic .hover-tooltip {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 120px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .hover-pic .hover-tooltip img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hover-pic:hover .hover-tooltip {
+      display: block;
+    }
+
+    .inline-flag {
+      height: 1em;
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+
     .section.music-section {
       margin-bottom: 0;
     }
@@ -228,9 +264,9 @@
     <div class="section">
       <p class="section-label">Bio</p>
       <ul class="bio-list">
-        <li>Currently live in Austin, TX, with my wife, Amani, and our two cats, Teddy &amp; Bear</li>
-        <li>Born &amp; raised in Denver, CO</li>
-        <li>BA, Economics &mdash; UT Austin | MBA &mdash; UT Austin</li>
+        <li>Currently live in Austin, TX, with my wife, <span class="hover-pic">Amani<span class="hover-tooltip"><img src="amani.jpeg" alt="Amani"></span></span>, and our two cats, <span class="hover-pic">Teddy<span class="hover-tooltip"><img src="teddy.jpeg" alt="Teddy"></span></span> &amp; <span class="hover-pic">Bear<span class="hover-tooltip"><img src="bear.jpeg" alt="Bear"></span></span></li>
+        <li>Born &amp; raised in Denver, CO <img src="co_flag.svg.png" alt="Colorado flag" class="inline-flag"></li>
+        <li>BA, Economics &mdash; UT Austin | MBA &mdash; UT Austin <img src="texas.JPG" alt="Texas" class="inline-flag"></li>
         <li>Love to cook, travel, build web tools, and go to football games <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Texas_Longhorns_logo.svg/120px-Texas_Longhorns_logo.svg.png" alt="Longhorns logo" class="longhorns-logo"> <img src="https://upload.wikimedia.org/wikipedia/en/thumb/4/44/Denver_Broncos_logo.svg/120px-Denver_Broncos_logo.svg.png" alt="Broncos logo" class="longhorns-logo"></li>
       </ul>
     </div>
