@@ -66,18 +66,19 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
 .date-blk .mon{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.18em;color:var(--gold)}
 .date-blk .day{font-family:"Big Shoulders Display",sans-serif;font-weight:800;font-size:38px;line-height:.9;margin-top:2px}
 .card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.venue{font-family:"Big Shoulders Display",sans-serif;font-weight:700;font-size:23px;text-transform:uppercase;line-height:1.02}
-.meta{font-family:"Space Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.06em;margin-top:5px}
+.who{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;min-width:0}
+.who-act{display:inline-flex;align-items:center;gap:9px;font-family:"Big Shoulders Display",sans-serif;font-weight:700;font-size:26px;text-transform:uppercase;line-height:1;cursor:pointer;color:var(--ink);transition:color .15s}
+.who-act:hover{color:var(--gold)}
+.who-act .x{color:var(--gold);font-family:"Space Mono",monospace;font-size:11px;vertical-align:super;margin-left:2px;font-weight:400}
+.who-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;background:var(--card-hi);border:1px solid var(--line);flex-shrink:0}
+.where{display:flex;align-items:center;gap:9px;font-family:"Big Shoulders Text",sans-serif;font-weight:600;font-size:15px;color:#d7cdc3;margin-top:13px}
+.venue-logo{height:22px;width:auto;max-width:90px;object-fit:contain;flex-shrink:0}
+.meta{font-family:"Space Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.06em;margin-top:4px}
 .meta .st{color:var(--ink)}
-.act-avatar{width:16px;height:16px;border-radius:50%;object-fit:cover;background:var(--card-hi);margin-right:7px;vertical-align:-3px}
 .artcard-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;background:var(--card-hi);border:1px solid var(--line);flex-shrink:0}
 .tag{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:5px 9px;border-radius:2px;white-space:nowrap;flex-shrink:0}
 .tag.Festival{background:var(--gold-soft);color:var(--gold);border:1px solid rgba(233,177,74,.4)}
 .tag.Concert{border:1px solid var(--line);color:var(--muted)}
-.lineup{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
-.act{font-family:"Big Shoulders Text",sans-serif;font-weight:600;font-size:14px;padding:5px 11px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:2px;color:#e7ded6;cursor:pointer;transition:.15s}
-.act:hover{border-color:var(--gold);color:var(--gold)}
-.act .x{color:var(--gold);font-family:"Space Mono",monospace;font-size:9px;vertical-align:super;margin-left:3px}
 .tour{font-family:"Big Shoulders Text",sans-serif;font-style:italic;font-size:13px;color:var(--muted);margin-top:11px}
 /* map */
 .mapview{display:none;padding:24px 0 10px}
@@ -127,6 +128,7 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:30px 0 60px;font
   .stat:nth-child(4),.stat:nth-child(5){border-top:1px solid var(--line)}
   .card{grid-template-columns:60px 1fr;gap:14px;padding:16px}
   .date-blk{padding-right:12px} .date-blk .day{font-size:30px}
+  .who-act{font-size:20px} .who-avatar{width:22px;height:22px}
   #map{height:440px}
 }
 </style>
@@ -266,8 +268,8 @@ function _initArtistImages(){
 function applyAvatar(name,url){
   document.querySelectorAll('[data-artist]').forEach(el=>{
     if(el.getAttribute('data-artist')!==name)return;
-    if(el.querySelector('.act-avatar,.artcard-avatar'))return;
-    const cls=el.classList.contains('act')?'act-avatar':'artcard-avatar';
+    if(el.querySelector('.who-avatar,.artcard-avatar'))return;
+    const cls=el.classList.contains('who-act')?'who-avatar':'artcard-avatar';
     const img=document.createElement('img'); img.className=cls; img.src=url; img.alt=''; img.loading='lazy';
     img.onerror=()=>img.remove();
     el.prepend(img);});}
@@ -365,13 +367,18 @@ function renderTimeline(){
 }
 function avatarHtml(name,cls){const u=artistImg[name];if(!u)return '';
   return `<img class="${cls}" src="${u.replace(/"/g,'&quot;')}" alt="" loading="lazy" onerror="this.remove()">`;}
+function slugify(s){return (s||'').toLowerCase().replace(/['']/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+function _venueLogoFallback(img){const tries=['webp','svg','jpg'];img.__t=img.__t||0;
+  if(img.__t<tries.length){img.src=img.src.replace(/\.[a-z]+$/i,'.'+tries[img.__t++]);}else{img.remove();}}
+function venueLogoHtml(venue){return `<img class="venue-logo" src="venues/${slugify(venue)}.png" alt="" loading="lazy" onerror="_venueLogoFallback(this)">`;}
 function card(s){
-  const acts=s.artists.map(a=>`<span class="act" data-artist="${a.replace(/"/g,'&quot;')}" onclick="pickArtist('${a.replace(/'/g,"\\'")}')">${avatarHtml(a,'act-avatar')}${a}${repeatMap[a]>1?`<span class="x">×${repeatMap[a]}</span>`:''}</span>`).join('');
+  const who=s.artists.map(a=>`<span class="who-act" data-artist="${a.replace(/"/g,'&quot;')}" onclick="pickArtist('${a.replace(/'/g,"\\'")}')">${avatarHtml(a,'who-avatar')}${a}${repeatMap[a]>1?`<span class="x">×${repeatMap[a]}</span>`:''}</span>`).join('');
   return `<div class="card s-${s.state}"><div class="date-blk"><div class="mon">${s.mon}</div><div class="day">${s.day}</div></div>
-    <div><div class="top"><div><div class="venue">${s.venue}</div>
-    <div class="meta">${s.city}, <span class="st">${s.state}</span> · ${s.display}</div></div>
+    <div><div class="top"><div class="who">${who}</div>
     <span class="tag ${s.type}">${s.type}</span></div>
-    ${s.tour?`<div class="tour">${s.tour}</div>`:''}<div class="lineup">${acts}</div></div></div>`;
+    <div class="where">${venueLogoHtml(s.venue)}${s.venue}</div>
+    <div class="meta">${s.city}, <span class="st">${s.state}</span> · ${s.display}</div>
+    ${s.tour?`<div class="tour">${s.tour}</div>`:''}</div></div>`;
 }
 function pickArtist(name){filt.q=name.toLowerCase();document.getElementById('q').value=name;
   document.querySelectorAll('#stateChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.st==="ALL"));
