@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Live — A Concert Log</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2318161d'/><text x='32' y='48' text-anchor='middle' font-family='serif' font-size='44' font-weight='bold' fill='%23e9b14a'>✦</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@400;600;800;900&family=Big+Shoulders+Text:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -69,8 +70,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
 .venue{font-family:"Big Shoulders Display",sans-serif;font-weight:700;font-size:23px;text-transform:uppercase;line-height:1.02}
 .meta{font-family:"Space Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.06em;margin-top:5px}
 .meta .st{color:var(--ink)}
-.topleft{display:flex;gap:13px;align-items:center;min-width:0}
-.show-logo{width:46px;height:46px;border-radius:6px;object-fit:cover;border:1px solid var(--line);background:var(--card-hi);flex-shrink:0}
+.act-avatar{width:16px;height:16px;border-radius:50%;object-fit:cover;background:var(--card-hi);margin-right:7px;vertical-align:-3px}
+.artcard-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;background:var(--card-hi);border:1px solid var(--line);flex-shrink:0}
 .tag{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:5px 9px;border-radius:2px;white-space:nowrap;flex-shrink:0}
 .tag.Festival{background:var(--gold-soft);color:var(--gold);border:1px solid rgba(233,177,74,.4)}
 .tag.Concert{border:1px solid var(--line);color:var(--muted)}
@@ -181,7 +182,8 @@ const STCOL={TX:'#f2913b',CO:'#54cfc0',WY:'#a7c46b'};
      · date    YYYY-MM-DD
      · type    Concert  or  Festival
      · artists separate multiple acts with semicolons, e.g.  Drake; J. Cole; 2 Chainz
-     · image   optional http(s) logo/photo URL shown on that show's card; blank for none
+     · image   optional override for the headliner (row's first artist). Leave blank to let
+               the Wikipedia auto-fetch pick the photo. Use only when auto-fetch picks wrong.
    New venue? Add its [lat, lng] to the VENUES map above, or it shows everywhere
    except the map (a console warning will name any venue missing coordinates). */
 const SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vSgzsdhJH86SZb6YnQc3SFagzx5sCp0tPu53w4OtfIhU-8fkrOuCjKcJVhVnlFl4oY-M5RbQniM9D_B/pub?output=csv";
@@ -212,6 +214,87 @@ async function loadShows(){if(!SHEET_CSV_URL)return null;
   const res=await fetch(SHEET_CSV_URL,{cache:'no-store'});if(!res.ok)throw new Error('HTTP '+res.status);
   return rowsToShows(parseCSV(await res.text()));}
 
+/* ---- AUTO ARTIST IMAGES (Wikipedia, cached in localStorage) ----
+   On first load we look up each artist's Wikipedia thumbnail and stash the URL.
+   Cached 30 days per artist so subsequent loads are instant. The sheet's image
+   column overrides the auto pick for the row's headliner. Hints handle the few
+   common-noun bands where bare search lands on the wrong page. */
+const _IMG_KEY='cl_artistImg_v1',_IMG_TTL=30*24*3600*1000,_IMG_MISS_TTL=3*24*3600*1000;
+const _IMG_HINTS={
+  'Goose':'Goose (American band)','Ghost':'Ghost (Swedish band)','Spoon':'Spoon (band)',
+  'Slipknot':'Slipknot (band)','Drake':'Drake (musician)','Disturbed':'Disturbed (band)',
+  'P!nk':'Pink (singer)','Disclosure':'Disclosure (band)','Flume':'Flume (musician)',
+  'Bleachers':'Bleachers (band)','B.o.B':'B.o.B (rapper)',
+  'Empire of the Sun':'Empire of the Sun (band)','Mk.Gee':'Mk.gee',
+  'ZHU':'Zhu (musician)'};
+let artistImg={};
+function _loadImgCache(){try{const j=JSON.parse(localStorage.getItem(_IMG_KEY)||'{}'),now=Date.now(),out={};
+  for(const k in j){const e=j[k];if(!e)continue;const ttl=e.url?_IMG_TTL:_IMG_MISS_TTL;
+    if(now-e.t<ttl)out[k]=e;} return out;}catch(e){return {};}}
+function _saveImgCache(c){try{localStorage.setItem(_IMG_KEY,JSON.stringify(c));}catch(e){}}
+async function _wikiThumb(q){
+  const url='https://en.wikipedia.org/w/api.php?'+new URLSearchParams({
+    action:'query',format:'json',origin:'*',generator:'search',gsrsearch:q,gsrlimit:'1',
+    prop:'pageimages',piprop:'thumbnail',pithumbsize:'120',formatversion:'2'});
+  try{const r=await fetch(url);if(!r.ok)return null;
+    const j=await r.json(),p=j.query&&j.query.pages&&j.query.pages[0];
+    return (p&&p.thumbnail&&p.thumbnail.source)||null;}catch(e){return null;}}
+async function _wikiBatch(titles){
+  // Look up many titles at once (up to 50), following redirects/normalizations.
+  // Returns { inputTitle: thumbnailUrl } only for titles whose article had a pageimage.
+  const url='https://en.wikipedia.org/w/api.php?'+new URLSearchParams({
+    action:'query',format:'json',origin:'*',redirects:'1',
+    titles:titles.join('|'),prop:'pageimages',piprop:'thumbnail',pithumbsize:'120',formatversion:'2'});
+  try{const r=await fetch(url);if(!r.ok)return {};
+    const j=await r.json(),q=j.query||{},fwd={};
+    titles.forEach(t=>fwd[t]=t);
+    (q.normalized||[]).forEach(n=>{for(const k in fwd) if(fwd[k]===n.from)fwd[k]=n.to;});
+    (q.redirects||[]).forEach(rr=>{for(const k in fwd) if(fwd[k]===rr.from)fwd[k]=rr.to;});
+    const thumb={};
+    (q.pages||[]).forEach(p=>{if(p.thumbnail&&p.thumbnail.source)thumb[p.title]=p.thumbnail.source;});
+    const out={};
+    titles.forEach(t=>{if(thumb[fwd[t]])out[t]=thumb[fwd[t]];});
+    return out;}catch(e){return {};}}
+function _initArtistImages(){
+  const ov={}; DATA.forEach(s=>{if(s.image&&s.artists[0])ov[s.artists[0]]=s.image;});
+  const cache=_loadImgCache(); artistImg={};
+  const all=[...new Set(DATA.flatMap(s=>s.artists))], need=[];
+  all.forEach(n=>{
+    if(ov[n])artistImg[n]=ov[n];
+    else if(n in cache){if(cache[n].url)artistImg[n]=cache[n].url;}
+    else need.push(n);});
+  return {cache,need};}
+function applyAvatar(name,url){
+  document.querySelectorAll('[data-artist]').forEach(el=>{
+    if(el.getAttribute('data-artist')!==name)return;
+    if(el.querySelector('.act-avatar,.artcard-avatar'))return;
+    const cls=el.classList.contains('act')?'act-avatar':'artcard-avatar';
+    const img=document.createElement('img'); img.className=cls; img.src=url; img.alt=''; img.loading='lazy';
+    img.onerror=()=>img.remove();
+    el.prepend(img);});}
+async function _backgroundFetchImages(cache,need){
+  // Phase A: batched direct-title lookups. Each artist's hint (if any) becomes its query title.
+  const queryToArtist={}; const queries=need.map(n=>{const q=_IMG_HINTS[n]||n; queryToArtist[q]=n; return q;});
+  for(let i=0;i<queries.length;i+=50){
+    const batch=queries.slice(i,i+50);
+    const res=await _wikiBatch(batch);
+    for(const q in res){const n=queryToArtist[q], url=res[q];
+      cache[n]={url,t:Date.now()}; artistImg[n]=url; applyAvatar(n,url);}
+    _saveImgCache(cache);
+    await new Promise(r=>setTimeout(r,300));
+  }
+  // Phase B: search-based fallback for stragglers, slow to stay under Wikipedia's rate cap.
+  const stragglers=need.filter(n=>!cache[n]);
+  for(const n of stragglers){
+    let url=await _wikiThumb(n+' band');
+    if(!url) url=await _wikiThumb(n);
+    cache[n]={url:url||null,t:Date.now()};
+    if(url){artistImg[n]=url; applyAvatar(n,url);}
+    _saveImgCache(cache);
+    await new Promise(r=>setTimeout(r,1500));
+  }
+}
+
 let order="desc",view="timeline",artSort="count";
 const filt={q:"",state:"ALL",type:"ALL"};
 let repeatMap={},yrsAll=[];
@@ -238,7 +321,9 @@ function boot(){
   document.querySelectorAll('#typeChips .chip').forEach(c=>c.onclick=()=>{filt.type=c.dataset.ty;
     document.querySelectorAll('#typeChips .chip').forEach(x=>x.classList.toggle('on',x===c));refresh();});
   document.getElementById('foot').innerHTML=`${uShows} shows · ${uArtists} artists · ${uVenues} venues · ${minY}–${maxY}. ✦`;
+  const imgs=_initArtistImages();
   renderTimeline(); countUp();
+  if(imgs.need.length)_backgroundFetchImages(imgs.cache,imgs.need);
 }
 function countUp(){document.querySelectorAll('.stat .n').forEach(el=>{const to=+el.dataset.to;let c=0;const st=Math.max(1,Math.round(to/40));
   const t=setInterval(()=>{c+=st;if(c>=to){c=to;clearInterval(t)}el.textContent=c;},22);});}
@@ -279,12 +364,13 @@ function renderTimeline(){
       ss.map(card).join('')+`</div>`;}).join('');
   observe();
 }
+function avatarHtml(name,cls){const u=artistImg[name];if(!u)return '';
+  return `<img class="${cls}" src="${u.replace(/"/g,'&quot;')}" alt="" loading="lazy" onerror="this.remove()">`;}
 function card(s){
-  const acts=s.artists.map(a=>`<span class="act" onclick="pickArtist('${a.replace(/'/g,"\\'")}')">${a}${repeatMap[a]>1?`<span class="x">×${repeatMap[a]}</span>`:''}</span>`).join('');
-  const logo=(s.image&&/^https?:\/\//i.test(s.image))?`<img class="show-logo" src="${s.image.replace(/"/g,'&quot;')}" alt="" loading="lazy" onerror="this.remove()">`:'';
+  const acts=s.artists.map(a=>`<span class="act" data-artist="${a.replace(/"/g,'&quot;')}" onclick="pickArtist('${a.replace(/'/g,"\\'")}')">${avatarHtml(a,'act-avatar')}${a}${repeatMap[a]>1?`<span class="x">×${repeatMap[a]}</span>`:''}</span>`).join('');
   return `<div class="card s-${s.state}"><div class="date-blk"><div class="mon">${s.mon}</div><div class="day">${s.day}</div></div>
-    <div><div class="top"><div class="topleft">${logo}<div><div class="venue">${s.venue}</div>
-    <div class="meta">${s.city}, <span class="st">${s.state}</span> · ${s.display}</div></div></div>
+    <div><div class="top"><div><div class="venue">${s.venue}</div>
+    <div class="meta">${s.city}, <span class="st">${s.state}</span> · ${s.display}</div></div>
     <span class="tag ${s.type}">${s.type}</span></div>
     ${s.tour?`<div class="tour">${s.tour}</div>`:''}<div class="lineup">${acts}</div></div></div>`;
 }
@@ -346,8 +432,8 @@ function buildStats(){
   if(artSort==="count")arts.sort((x,y)=>y.n-x.n||x.a.localeCompare(y.a));
   else if(artSort==="az")arts.sort((x,y)=>x.a.localeCompare(y.a));
   else arts.sort((x,y)=>y.max-x.max||y.n-x.n);
-  const artHtml=arts.map(o=>`<div class="artcard" onclick="pickArtist('${o.a.replace(/'/g,"\\'")}')">
-    <div><div class="an">${o.a}</div><div class="ay">${o.min===o.max?o.min:o.min+'–'+o.max}</div></div>
+  const artHtml=arts.map(o=>`<div class="artcard" data-artist="${o.a.replace(/"/g,'&quot;')}" onclick="pickArtist('${o.a.replace(/'/g,"\\'")}')">
+    ${avatarHtml(o.a,'artcard-avatar')}<div><div class="an">${o.a}</div><div class="ay">${o.min===o.max?o.min:o.min+'–'+o.max}</div></div>
     <div class="ac">${o.n>1?'×'+o.n:'•'}</div></div>`).join('');
   const sb=(k,l)=>`<button class="tab ${artSort===k?'on':''}" onclick="artSort='${k}';buildStats()">${l}</button>`;
   document.getElementById('statsview').innerHTML=`
