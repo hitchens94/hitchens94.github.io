@@ -59,8 +59,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
 .year-head .y{font-family:"Big Shoulders Display",sans-serif;font-weight:900;font-size:clamp(40px,8vw,72px);line-height:.9;-webkit-text-stroke:1.5px var(--gold);color:transparent}
 .year-head .bar{flex:1;height:1px;background:var(--line)}
 .year-head .ct{font-family:"Space Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.15em}
-.card{display:grid;grid-template-columns:78px 1fr;gap:20px;padding:20px 22px;margin-bottom:12px;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--line);border-radius:3px;transition:transform .2s,background .2s,border-color .2s;opacity:0;transform:translateY(18px)}
-.card.in{opacity:1;transform:none}
+.card{display:grid;grid-template-columns:78px 1fr;gap:20px;padding:20px 22px;margin-bottom:12px;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--line);border-radius:3px;transition:transform .2s,background .2s,border-color .2s}
 .card:hover{background:var(--card-hi);transform:translateX(4px)}
 .card.s-TX{border-left-color:var(--tx)} .card.s-CO{border-left-color:var(--co)} .card.s-WY{border-left-color:var(--wy)}
 .date-blk{text-align:center;border-right:1px solid var(--line);padding-right:18px}
@@ -378,10 +377,7 @@ function pickArtist(name){filt.q=name.toLowerCase();document.getElementById('q')
   document.querySelectorAll('#stateChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.st==="ALL"));
   document.querySelectorAll('#typeChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.ty==="ALL"));
   filt.state="ALL";filt.type="ALL";setView('timeline');renderTimeline();window.scrollTo({top:document.querySelector('.controls').offsetTop,behavior:'smooth'});}
-let io;
-function observe(){if(io)io.disconnect();
-  io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.08});
-  document.querySelectorAll('.card:not(.in)').forEach((c,i)=>{c.style.transitionDelay=(Math.min(i,6)*0.04)+'s';io.observe(c);});}
+function observe(){/* entry animation removed — cards render in place */}
 
 /* ---- MAP ---- */
 let map,markerLayer;
