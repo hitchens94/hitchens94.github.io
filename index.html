@@ -240,6 +240,42 @@
       margin-left: 4px;
     }
 
+    .concert-link {
+      display: block;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 10px;
+      padding: 18px 20px;
+      transition: background 0.2s, transform 0.2s, border-color 0.2s;
+    }
+
+    .concert-link:hover {
+      background: rgba(0, 0, 0, 0.04);
+      border-color: rgba(0, 0, 0, 0.4);
+      text-decoration: none;
+      transform: translateX(4px);
+    }
+
+    .concert-link .title {
+      display: block;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .concert-link .title .arrow {
+      transition: margin-left 0.2s;
+    }
+
+    .concert-link:hover .title .arrow {
+      margin-left: 6px;
+    }
+
+    .concert-link .sub {
+      display: block;
+      font-size: 0.85rem;
+      opacity: 0.6;
+      margin-top: 4px;
+    }
+
     .section.music-section {
       margin-bottom: 0;
     }
@@ -324,6 +360,14 @@
           </a>
         </div>
       </div>
+    </div>
+
+    <div class="section">
+      <p class="section-label">Live Music</p>
+      <a href="concert-log.html" target="_blank" rel="noopener noreferrer" class="concert-link">
+        <span class="title">Every concert I've been to, visualized <span class="arrow">&rarr;</span></span>
+        <span class="sub">A live-music logbook, 2001&ndash;2026 &middot; timeline, map &amp; stats</span>
+      </a>
     </div>
 
     <div class="section music-section">
