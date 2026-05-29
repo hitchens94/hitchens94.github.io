@@ -368,7 +368,9 @@ function renderTimeline(){
 function avatarHtml(name,cls){const u=artistImg[name];if(!u)return '';
   return `<img class="${cls}" src="${u.replace(/"/g,'&quot;')}" alt="" loading="lazy" onerror="this.remove()">`;}
 function slugify(s){return (s||'').toLowerCase().replace(/['']/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
-function venueLogoHtml(venue){return `<img class="venue-logo" src="venues/${slugify(venue)}.png" alt="" loading="lazy" onerror="this.remove()">`;}
+function _venueLogoFallback(img){const tries=['webp','svg','jpg'];img.__t=img.__t||0;
+  if(img.__t<tries.length){img.src=img.src.replace(/\.[a-z]+$/i,'.'+tries[img.__t++]);}else{img.remove();}}
+function venueLogoHtml(venue){return `<img class="venue-logo" src="venues/${slugify(venue)}.png" alt="" loading="lazy" onerror="_venueLogoFallback(this)">`;}
 function card(s){
   const who=s.artists.map(a=>`<span class="who-act" data-artist="${a.replace(/"/g,'&quot;')}" onclick="pickArtist('${a.replace(/'/g,"\\'")}')">${avatarHtml(a,'who-avatar')}${a}${repeatMap[a]>1?`<span class="x">×${repeatMap[a]}</span>`:''}</span>`).join('');
   return `<div class="card s-${s.state}"><div class="date-blk"><div class="mon">${s.mon}</div><div class="day">${s.day}</div></div>
