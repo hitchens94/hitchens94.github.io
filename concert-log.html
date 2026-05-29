@@ -11,11 +11,11 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 :root{
-  --bg:#0b0a0d; --bg2:#121016; --ink:#f4efe7;
-  --muted:#9a9098; --line:rgba(255,255,255,.08);
+  --bg:#18161d; --bg2:#201d26; --ink:#f4efe7;
+  --muted:#aaa1a8; --line:rgba(255,255,255,.10);
   --gold:#e9b14a; --gold-soft:rgba(233,177,74,.14);
   --tx:#f2913b; --co:#54cfc0; --wy:#a7c46b;
-  --card:rgba(255,255,255,.025); --card-hi:rgba(255,255,255,.05);
+  --card:rgba(255,255,255,.04); --card-hi:rgba(255,255,255,.07);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -37,7 +37,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
 .stat{background:var(--bg);padding:26px 18px;text-align:center}
 .stat .n{font-family:"Big Shoulders Display",sans-serif;font-weight:800;font-size:clamp(34px,6vw,58px);line-height:1;color:var(--gold)}
 .stat .l{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;margin-top:9px}
-.controls{position:sticky;top:0;z-index:600;background:rgba(11,10,13,.86);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:14px 0;margin-top:2px}
+.controls{position:sticky;top:0;z-index:600;background:rgba(24,22,29,.86);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:14px 0;margin-top:2px}
 .controls .row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .search{flex:1;min-width:200px;position:relative}
 .search input{width:100%;background:var(--card);border:1px solid var(--line);color:var(--ink);font-family:"Big Shoulders Text",sans-serif;font-size:16px;padding:11px 14px 11px 38px;border-radius:2px;outline:none}
@@ -69,6 +69,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
 .venue{font-family:"Big Shoulders Display",sans-serif;font-weight:700;font-size:23px;text-transform:uppercase;line-height:1.02}
 .meta{font-family:"Space Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.06em;margin-top:5px}
 .meta .st{color:var(--ink)}
+.topleft{display:flex;gap:13px;align-items:center;min-width:0}
+.show-logo{width:46px;height:46px;border-radius:6px;object-fit:cover;border:1px solid var(--line);background:var(--card-hi);flex-shrink:0}
 .tag{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:5px 9px;border-radius:2px;white-space:nowrap;flex-shrink:0}
 .tag.Festival{background:var(--gold-soft);color:var(--gold);border:1px solid rgba(233,177,74,.4)}
 .tag.Concert{border:1px solid var(--line);color:var(--muted)}
@@ -80,7 +82,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
 /* map */
 .mapview{display:none;padding:24px 0 10px}
 .mapview.show{display:block}
-#map{height:560px;width:100%;border:1px solid var(--line);border-radius:3px;background:#0d0d12}
+#map{height:560px;width:100%;border:1px solid var(--line);border-radius:3px;background:#18161d}
 .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-family:"Space Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.06em}
 .legend .it{display:flex;align-items:center;gap:7px}
 .legend .sw{width:11px;height:11px;border-radius:50%}
@@ -175,10 +177,11 @@ const STCOL={TX:'#f2913b',CO:'#54cfc0',WY:'#a7c46b'};
 /* ---- LIVE DATA (Google Sheet) ----
    Paste your sheet's "Publish to web → CSV" link below. Leave it as "" to use
    the built-in fallback list above.
-   Sheet columns (header row, any order): date | venue | city | state | tour | type | artists
+   Sheet columns (header row, any order): date | venue | city | state | tour | type | artists | image
      · date    YYYY-MM-DD
      · type    Concert  or  Festival
      · artists separate multiple acts with semicolons, e.g.  Drake; J. Cole; 2 Chainz
+     · image   optional http(s) logo/photo URL shown on that show's card; blank for none
    New venue? Add its [lat, lng] to the VENUES map above, or it shows everywhere
    except the map (a console warning will name any venue missing coordinates). */
 const SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vSgzsdhJH86SZb6YnQc3SFagzx5sCp0tPu53w4OtfIhU-8fkrOuCjKcJVhVnlFl4oY-M5RbQniM9D_B/pub?output=csv";
@@ -186,7 +189,7 @@ const _MONS=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','
 const _MONL=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function deriveShow(s){const p=(s.date||'').split('-').map(Number),y=p[0],m=p[1],d=p[2];
   return {date:s.date,year:y,display:`${_MONL[m-1]} ${d}, ${y}`,mon:_MONS[m-1],day:String(d),
-    venue:s.venue,city:s.city,state:s.state,tour:s.tour||'',type:s.type||'Concert',artists:s.artists};}
+    venue:s.venue,city:s.city,state:s.state,tour:s.tour||'',type:s.type||'Concert',artists:s.artists,image:s.image||''};}
 function parseCSV(text){const rows=[];let row=[],f='',i=0,q=false;text=text.replace(/\r\n?/g,'\n');
   while(i<text.length){const c=text[i];
     if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i+=2;continue;}q=false;i++;continue;}f+=c;i++;continue;}
@@ -198,11 +201,11 @@ function parseCSV(text){const rows=[];let row=[],f='',i=0,q=false;text=text.repl
   return rows;}
 function rowsToShows(rows){if(!rows.length)return [];
   const head=rows[0].map(h=>h.trim().toLowerCase()),at=n=>head.indexOf(n);
-  const di=at('date'),vi=at('venue'),ci=at('city'),si=at('state'),ti=at('tour'),pi=at('type'),ai=at('artists');
+  const di=at('date'),vi=at('venue'),ci=at('city'),si=at('state'),ti=at('tour'),pi=at('type'),ai=at('artists'),ii=at('image');
   const out=[];
   for(let r=1;r<rows.length;r++){const c=rows[r],date=(c[di]||'').trim();if(!date)continue;
     out.push(deriveShow({date,venue:(c[vi]||'').trim(),city:(c[ci]||'').trim(),state:(c[si]||'').trim().toUpperCase(),
-      tour:(c[ti]||'').trim(),type:(c[pi]||'').trim()||'Concert',
+      tour:(c[ti]||'').trim(),type:(c[pi]||'').trim()||'Concert',image:(c[ii]||'').trim(),
       artists:(c[ai]||'').split(';').map(x=>x.trim()).filter(Boolean)}));}
   return out;}
 async function loadShows(){if(!SHEET_CSV_URL)return null;
@@ -249,7 +252,7 @@ function setView(v){view=v;
   document.getElementById('timeline').style.display=v==="timeline"?"block":"none";
   document.getElementById('mapview').classList.toggle('show',v==="map");
   document.getElementById('statsview').classList.toggle('show',v==="stats");
-  document.getElementById('orderBtn').style.display=v==="timeline"?"":"none";
+  document.getElementById('orderBtn').style.visibility=v==="timeline"?"visible":"hidden";
   if(v==="map")renderMap();
   if(v==="stats")buildStats();
 }
@@ -278,9 +281,10 @@ function renderTimeline(){
 }
 function card(s){
   const acts=s.artists.map(a=>`<span class="act" onclick="pickArtist('${a.replace(/'/g,"\\'")}')">${a}${repeatMap[a]>1?`<span class="x">×${repeatMap[a]}</span>`:''}</span>`).join('');
+  const logo=(s.image&&/^https?:\/\//i.test(s.image))?`<img class="show-logo" src="${s.image.replace(/"/g,'&quot;')}" alt="" loading="lazy" onerror="this.remove()">`:'';
   return `<div class="card s-${s.state}"><div class="date-blk"><div class="mon">${s.mon}</div><div class="day">${s.day}</div></div>
-    <div><div class="top"><div><div class="venue">${s.venue}</div>
-    <div class="meta">${s.city}, <span class="st">${s.state}</span> · ${s.display}</div></div>
+    <div><div class="top"><div class="topleft">${logo}<div><div class="venue">${s.venue}</div>
+    <div class="meta">${s.city}, <span class="st">${s.state}</span> · ${s.display}</div></div></div>
     <span class="tag ${s.type}">${s.type}</span></div>
     ${s.tour?`<div class="tour">${s.tour}</div>`:''}<div class="lineup">${acts}</div></div></div>`;
 }
