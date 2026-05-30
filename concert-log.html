@@ -34,6 +34,12 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
 .hero h1{font-family:"Big Shoulders Display",sans-serif;font-weight:900;font-size:clamp(76px,17vw,190px);line-height:.84;letter-spacing:-.01em;text-transform:uppercase;margin:8px 0 0;
   background:linear-gradient(180deg,#fff 0%,#cfc6bd 70%,#8c8079 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
 .hero .sub{color:var(--muted);font-size:18px;max-width:48ch;margin-top:14px;line-height:1.4}
+.catbar{display:flex;gap:2px;margin-top:38px;border:1px solid var(--line);border-radius:3px;overflow:hidden;background:rgba(255,255,255,.025)}
+.catbtn{flex:1;background:transparent;border:none;color:var(--muted);padding:15px 12px;font-family:"Big Shoulders Display",sans-serif;font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;transition:.18s;display:flex;align-items:center;justify-content:center;gap:9px}
+.catbtn:hover{color:var(--ink);background:rgba(255,255,255,.04)}
+.catbtn.on{background:var(--gold);color:#1a1206}
+.catbtn .ct{font-family:"Space Mono",monospace;font-size:11px;font-weight:400;letter-spacing:.1em;opacity:.65}
+.catbtn.on .ct{opacity:.85}
 .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:46px}
 .stat{background:var(--bg);padding:26px 18px;text-align:center}
 .stat .n{font-family:"Big Shoulders Display",sans-serif;font-weight:800;font-size:clamp(34px,6vw,58px);line-height:1;color:var(--gold)}
@@ -148,6 +154,11 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:30px 0 60px;font
     <h1>Live</h1>
     <p class="sub">Every show, every stage. From Colorado mountainsides to Austin festival fields. Search it, map it, relive it.</p>
   </header>
+  <nav class="catbar" id="catbar">
+    <button class="catbtn on" data-cat="music">Music <span class="ct" data-ct="music">·</span></button>
+    <button class="catbtn" data-cat="standup">Stand-Up <span class="ct" data-ct="standup">·</span></button>
+    <button class="catbtn" data-cat="football">Football <span class="ct" data-ct="football">·</span></button>
+  </nav>
 </div>
 <div class="wrap"><div class="stats" id="statstrip"></div></div>
 <div class="controls"><div class="wrap">
@@ -325,34 +336,103 @@ async function _backgroundFetchImages(cache,need){
 }
 
 let order="desc",view="timeline",artSort="count";
-const filt={q:"",state:"ALL",type:"ALL"};
+const filt={cat:"music",q:"",state:"ALL",type:"ALL"};
 let repeatMap={},yrsAll=[];
 
+/* ---- CATEGORIES ----
+   The site shows three event types backed by the same sheet. The 'type' column
+   in the sheet drives which tab a row belongs to: Concert/Festival → Music,
+   Stand-Up → Stand-Up, Football → Football. Each tab swaps the hero copy and
+   filters the timeline/map/stats below. Deep-link with #music / #standup /
+   #football in the URL. */
+const CATS={
+  music:{types:['Concert','Festival'],
+    title:'Live',
+    kicker:y=>`A live-music logbook · ${y}`,
+    sub:'Every show, every stage. From Colorado mountainsides to Austin festival fields. Search it, map it, relive it.',
+    docTitle:'Live: A Concert Log',
+    spanLabel:'Concerts across the span',
+    buddiesLabel:'Concert buddies'},
+  standup:{types:['Stand-Up'],
+    title:'Live',
+    kicker:y=>`Stand-up I've seen live · ${y}`,
+    sub:"Every set, every laugh. The comedians I've caught in person — from clubs to arenas.",
+    docTitle:'Live: A Stand-Up Log',
+    spanLabel:'Sets across the span',
+    buddiesLabel:'Comedy buddies'},
+  football:{types:['Football'],
+    title:'Live',
+    kicker:y=>`Football I've been to · ${y}`,
+    sub:"Every kickoff, every stadium. The football games I've watched in person.",
+    docTitle:'Live: A Football Log',
+    spanLabel:'Games across the span',
+    buddiesLabel:'Football buddies'},
+};
+function _validCat(c){return CATS[c]?c:'music';}
+function _catFromHash(){return _validCat((location.hash||'').slice(1).toLowerCase());}
+function inCat(s,cat){return CATS[cat].types.indexOf(s.type)!==-1;}
+
+function _nounFor(cat){return cat==='music'?'shows':cat==='standup'?'sets':'games';}
+function _actorLabelFor(cat){return cat==='music'?'Artists':cat==='standup'?'Comedians':'Teams';}
+
 function boot(){
-  const allActs=[...new Set(DATA.flatMap(s=>s.artists))];
-  document.getElementById('mq').innerHTML=(allActs.join('  <b>✦</b>  ')+'  <b>✦</b>  ').repeat(2);
-  const uShows=DATA.length, uArtists=allActs.length,
-    uVenues=new Set(DATA.map(s=>s.venue)).size, uStates=new Set(DATA.map(s=>s.state)).size;
-  yrsAll=DATA.map(s=>s.year);
-  const minY=Math.min(...yrsAll),maxY=Math.max(...yrsAll),span=maxY-minY;
-  const kick=document.querySelector('.kicker'); if(kick)kick.textContent=`A live-music logbook · ${minY} – ${maxY}`;
-  document.getElementById('statstrip').innerHTML=
-    [["Shows",uShows],["Artists",uArtists],["Venues",uVenues],["States",uStates],["Years",span]]
-    .map(([l,n])=>`<div class="stat"><div class="n" data-to="${n}">0</div><div class="l">${l}</div></div>`).join('');
-  repeatMap={}; DATA.flatMap(s=>s.artists).forEach(a=>repeatMap[a]=(repeatMap[a]||0)+1);
-  const states=[...new Set(DATA.map(s=>s.state))];
-  document.getElementById('stateChips').innerHTML=`<button class="chip on" data-st="ALL">All</button>`+
-    states.map(s=>`<button class="chip dot" data-st="${s}" style="color:${STCOL[s]||'#e9b14a'}">${s}</button>`).join('');
+  filt.cat=_catFromHash();
+  // Per-cat counts on the catbar (computed once from full DATA)
+  for(const c in CATS){const n=DATA.filter(s=>inCat(s,c)).length;
+    const el=document.querySelector(`.catbtn .ct[data-ct="${c}"]`); if(el)el.textContent=n?'· '+n:'';}
+  // Wire catbar — clicking sets the hash, hashchange triggers re-render
+  document.querySelectorAll('.catbtn').forEach(b=>b.onclick=()=>{location.hash='#'+b.dataset.cat;});
+  window.addEventListener('hashchange',()=>{filt.cat=_catFromHash();applyCat();});
+  // Type chips are static (only meaningful in Music); wire once
   document.getElementById('typeChips').innerHTML=`<button class="chip on" data-ty="ALL">All</button>
     <button class="chip" data-ty="Festival">Festivals</button><button class="chip" data-ty="Concert">Concerts</button>`;
-  document.querySelectorAll('#stateChips .chip').forEach(c=>c.onclick=()=>{filt.state=c.dataset.st;
-    document.querySelectorAll('#stateChips .chip').forEach(x=>x.classList.toggle('on',x===c));refresh();});
   document.querySelectorAll('#typeChips .chip').forEach(c=>c.onclick=()=>{filt.type=c.dataset.ty;
     document.querySelectorAll('#typeChips .chip').forEach(x=>x.classList.toggle('on',x===c));refresh();});
-  document.getElementById('foot').innerHTML=`${uShows} shows · ${uArtists} artists · ${uVenues} venues · ${minY}–${maxY}. ✦`;
+  applyCat();
   const imgs=_initArtistImages();
-  renderTimeline(); countUp();
   if(imgs.need.length)_backgroundFetchImages(imgs.cache,imgs.need);
+}
+
+function applyCat(){
+  const cfg=CATS[filt.cat];
+  document.querySelectorAll('.catbtn').forEach(b=>b.classList.toggle('on',b.dataset.cat===filt.cat));
+  document.title=cfg.docTitle;
+  // Subset of DATA in current category
+  const sub=DATA.filter(s=>inCat(s,filt.cat));
+  const allActs=[...new Set(sub.flatMap(s=>s.artists))];
+  document.getElementById('mq').innerHTML=allActs.length?(allActs.join('  <b>✦</b>  ')+'  <b>✦</b>  ').repeat(2):'';
+  const uShows=sub.length, uArtists=allActs.length,
+    uVenues=new Set(sub.map(s=>s.venue)).size, uStates=new Set(sub.map(s=>s.state)).size;
+  yrsAll=sub.map(s=>s.year);
+  const minY=yrsAll.length?Math.min(...yrsAll):0, maxY=yrsAll.length?Math.max(...yrsAll):0, span=Math.max(0,maxY-minY);
+  // Hero copy
+  document.querySelector('.kicker').textContent=cfg.kicker(yrsAll.length?`${minY} – ${maxY}`:'coming soon');
+  document.querySelector('.hero .sub').textContent=cfg.sub;
+  // Stats strip
+  const actor=_actorLabelFor(filt.cat);
+  document.getElementById('statstrip').innerHTML=
+    [["Shows",uShows],[actor,uArtists],["Venues",uVenues],["States",uStates],["Years",span]]
+    .map(([l,n])=>`<div class="stat"><div class="n" data-to="${n}">0</div><div class="l">${l}</div></div>`).join('');
+  countUp();
+  // Repeat map (used by card() to show ×N) — scoped to category
+  repeatMap={}; sub.flatMap(s=>s.artists).forEach(a=>repeatMap[a]=(repeatMap[a]||0)+1);
+  // State chips: only states this category covers; reset state filter on cat switch
+  filt.state='ALL';
+  const states=[...new Set(sub.map(s=>s.state))];
+  document.getElementById('stateChips').innerHTML=`<button class="chip on" data-st="ALL">All</button>`+
+    states.map(s=>`<button class="chip dot" data-st="${s}" style="color:${STCOL[s]||'#e9b14a'}">${s}</button>`).join('');
+  document.querySelectorAll('#stateChips .chip').forEach(c=>c.onclick=()=>{filt.state=c.dataset.st;
+    document.querySelectorAll('#stateChips .chip').forEach(x=>x.classList.toggle('on',x===c));refresh();});
+  // Concert/Festival chips only meaningful in Music
+  document.getElementById('typeChips').style.display=filt.cat==='music'?'':'none';
+  if(filt.cat!=='music'){filt.type='ALL';
+    document.querySelectorAll('#typeChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.ty==='ALL'));}
+  // Footer
+  const noun=_nounFor(filt.cat);
+  document.getElementById('foot').innerHTML = uShows
+    ? `${uShows} ${noun} · ${uArtists} ${actor.toLowerCase()} · ${uVenues} venues · ${minY}–${maxY}. ✦`
+    : `No ${noun} yet — add rows with type "${cfg.types.join(' / ')}" to the sheet.`;
+  refresh();
 }
 function countUp(){document.querySelectorAll('.stat .n').forEach(el=>{const to=+el.dataset.to;let c=0;const st=Math.max(1,Math.round(to/40));
   const t=setInterval(()=>{c+=st;if(c>=to){c=to;clearInterval(t)}el.textContent=c;},22);});}
@@ -371,8 +451,9 @@ function setView(v){view=v;
   if(v==="stats")buildStats();
 }
 function match(s){
+  if(!inCat(s,filt.cat))return false;
   if(filt.state!=="ALL"&&s.state!==filt.state)return false;
-  if(filt.type!=="ALL"&&s.type!==filt.type)return false;
+  if(filt.cat==="music"&&filt.type!=="ALL"&&s.type!==filt.type)return false;
   if(filt.q){const h=(s.venue+' '+s.city+' '+s.state+' '+s.tour+' '+s.artists.join(' ')+' '+(s.friends||[]).join(' ')).toLowerCase();
     if(!h.includes(filt.q))return false;}
   return true;
@@ -385,7 +466,12 @@ function renderTimeline(){
   const nA=new Set(rows.flatMap(s=>s.artists)).size;
   document.getElementById('countline').innerHTML=`Showing <b>${rows.length}</b> shows · <b>${nA}</b> artists`;
   const tl=document.getElementById('timeline');
-  if(!rows.length){tl.innerHTML='<div class="empty">No shows match that. Try clearing the search (Esc).</div>';return;}
+  if(!rows.length){
+    const noun=_nounFor(filt.cat), totalInCat=DATA.filter(s=>inCat(s,filt.cat)).length;
+    tl.innerHTML=totalInCat
+      ? `<div class="empty">No ${noun} match that. Try clearing the search (Esc).</div>`
+      : `<div class="empty">No ${noun} logged yet.<br><span style="opacity:.6">Add rows with type "${CATS[filt.cat].types.join(' / ')}" to your sheet to populate this tab.</span></div>`;
+    return;}
   const byYear={}; rows.forEach(s=>{(byYear[s.year]=byYear[s.year]||[]).push(s);});
   const years=Object.keys(byYear).sort((a,b)=>order==="desc"?b-a:a-b);
   tl.innerHTML=years.map(y=>{const ss=byYear[y];
@@ -455,6 +541,7 @@ function renderMap(){
 /* ---- STATS ---- */
 function buildStats(){
   const rows=filtered();
+  if(!yrsAll.length){document.getElementById('statsview').innerHTML='<div class="empty">No data yet for this category.</div>';return;}
   const minY=Math.min(...yrsAll),maxY=Math.max(...yrsAll);
   const yr={}; for(let y=minY;y<=maxY;y++)yr[y]=0;
   rows.forEach(s=>yr[s.year]++);
@@ -484,12 +571,13 @@ function buildStats(){
     ${personAvatarHtml(o.f,'lg')}<div><div class="an">${o.f}</div><div class="ay">${o.min===o.max?o.min:o.min+'–'+o.max}</div></div>
     <div class="ac">${o.n>1?'×'+o.n:'•'}</div></div>`).join('');
   const sb=(k,l)=>`<button class="tab ${artSort===k?'on':''}" onclick="artSort='${k}';buildStats()">${l}</button>`;
+  const cfg=CATS[filt.cat], actor=_actorLabelFor(filt.cat);
   document.getElementById('statsview').innerHTML=`
-    <div class="panel"><h3>Concerts across the span · ${minY}–${maxY}</h3><div class="spanchart">${cols}</div></div>
+    <div class="panel"><h3>${cfg.spanLabel} · ${minY}–${maxY}</h3><div class="spanchart">${cols}</div></div>
     <div class="panel"><h3>By state</h3>${stBars}</div>
     <div class="panel"><h3>Most-visited venues</h3>${topV}</div>
-    ${buds.length?`<div class="panel"><h3>Concert buddies · ${buds.length}</h3><div class="artgrid">${budHtml}</div></div>`:''}
-    <div class="panel"><h3><span>Artists · ${arts.length}</span><span class="sortbtns">${sb('count','Most seen')}${sb('recent','Recent')}${sb('az','A–Z')}</span></h3><div class="artgrid">${artHtml}</div></div>`;
+    ${buds.length?`<div class="panel"><h3>${cfg.buddiesLabel} · ${buds.length}</h3><div class="artgrid">${budHtml}</div></div>`:''}
+    <div class="panel"><h3><span>${actor} · ${arts.length}</span><span class="sortbtns">${sb('count','Most seen')}${sb('recent','Recent')}${sb('az','A–Z')}</span></h3><div class="artgrid">${artHtml}</div></div>`;
   requestAnimationFrame(()=>setTimeout(()=>{
     document.querySelectorAll('.spanchart .bar').forEach(b=>b.style.height=b.dataset.h+'%');
     document.querySelectorAll('.barrow .fill').forEach(f=>f.style.width=f.dataset.w+'%');
