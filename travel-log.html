@@ -208,40 +208,12 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:30px 0 60px;font
   <div class="lb-cap" id="lbCap"></div>
 </div>
 <script>
-/* Built-in fallback list — used only if the live Google Sheet can't be loaded.
-   These are EXAMPLE rows demonstrating the schema. Replace once your sheet is wired. */
-let DATA = [
-  {date_start:"2023-07-15",date_end:"2023-07-22",trip_id:"",trip_name:"",
-   place:"Yellowstone National Park",region:"WY",country:"United States",
-   lat:44.428,lng:-110.5885,friends:["Amani Fife"],
-   photo_folder:"yellowstone-2023",photos:["01.jpg","02.jpg","03.jpg"],
-   story:"A week in Yellowstone — Old Faithful at dawn, the Mammoth terraces in afternoon light, bison crossing the road by Lamar Valley. The geyser basins felt otherworldly.",
-   tags:["national-park","wildlife","camping"]},
-  {date_start:"2024-04-10",date_end:"2024-04-14",trip_id:"europe-spring-2024",trip_name:"Europe · Spring 2024",
-   place:"Paris",region:"Île-de-France",country:"France",
-   lat:48.8566,lng:2.3522,friends:["Amani Fife"],
-   photo_folder:"europe-spring-2024",photos:["paris-01.jpg","paris-02.jpg"],
-   story:"Three nights in the Marais. Morning espresso, market crawl in the 11th, Sainte-Chapelle's blue glass right before close.",
-   tags:["city","food","first-time"]},
-  {date_start:"2024-04-14",date_end:"2024-04-17",trip_id:"europe-spring-2024",trip_name:"Europe · Spring 2024",
-   place:"Lyon",region:"Auvergne-Rhône-Alpes",country:"France",
-   lat:45.764,lng:4.8357,friends:["Amani Fife"],
-   photo_folder:"europe-spring-2024",photos:["lyon-01.jpg"],
-   story:"Bouchon dinners and the old town stairs. Quieter than Paris and we needed the breather.",
-   tags:["city","food"]},
-  {date_start:"2024-04-17",date_end:"2024-04-22",trip_id:"europe-spring-2024",trip_name:"Europe · Spring 2024",
-   place:"Lake Como",region:"Lombardy",country:"Italy",
-   lat:45.9879,lng:9.2572,friends:["Amani Fife"],
-   photo_folder:"europe-spring-2024",photos:["como-01.jpg","como-02.jpg","como-03.jpg"],
-   story:"Ferries across the lake every morning. Bellagio, Varenna, a long lazy lunch in Menaggio. Best stretch of the trip.",
-   tags:["lake","food"]},
-  {date_start:"2022-10-21",date_end:"2022-10-24",trip_id:"",trip_name:"",
-   place:"New Orleans",region:"LA",country:"United States",
-   lat:29.9511,lng:-90.0715,friends:["Amani Fife","Chris Hill"],
-   photo_folder:"nola-2022",photos:[],
-   story:"A long weekend of beignets, brass bands, and walking the Garden District until our feet gave out.",
-   tags:["city","food","music"]},
-];
+/* Built-in fallback list — empty by design. The Google Sheet is the source of
+   truth (see SHEET_CSV_URL below). On the rare case where the sheet is
+   unreachable AND no localStorage cache exists yet (e.g. brand-new visitor on
+   a flaky network), the page shows "No trips logged yet" rather than fake
+   data. Don't seed examples here. */
+let DATA = [];
 
 /* Map of countries the page has rendered, keyed by lowercase name → ISO-ish display.
    No baked geocoding table: lat/lng comes from the sheet (per row) so adding a new
@@ -605,9 +577,13 @@ function buildStats(){
   const budHtml=buds.map(o=>`<div class="budcard" data-friend="${o.f.replace(/"/g,'&quot;')}" onclick="pickFriend('${o.f.replace(/'/g,"\\'")}')">
     ${personAvatarHtml(o.f,'lg')}<div><div class="an">${o.f}</div><div class="ay">${o.min===o.max?o.min:o.min+'–'+o.max}</div></div>
     <div class="ac">${o.n>1?'×'+o.n:'•'}</div></div>`).join('');
-  // Highlights: first ever, most recent, longest trip
-  const allSorted=[...DATA].sort((a,b)=>a.date_start.localeCompare(b.date_start));
-  const first=allSorted[0], last=allSorted[allSorted.length-1];
+  // Highlights: first / most recent / longest — all derived from the filtered
+  // `rows` (and `groups`, which already comes from `rows`) so that toggling a
+  // country/tag/search updates every panel consistently. Using full DATA here
+  // for first+last would make the highlights describe trips that aren't in any
+  // other panel on the same screen.
+  const rowsSorted=[...rows].sort((a,b)=>a.date_start.localeCompare(b.date_start));
+  const first=rowsSorted[0], last=rowsSorted[rowsSorted.length-1];
   const longest=[...groups].sort((a,b)=>b.span-a.span)[0];
   const highHtml=`
     <div class="high"><div class="hl">First trip</div><div class="hn">${first?first.place:'—'}</div><div class="hs">${first?_formatRange(first.date_start,first.date_end||first.date_start):''}</div></div>
