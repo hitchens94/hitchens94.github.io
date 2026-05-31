@@ -268,7 +268,7 @@ let DATA = [
      · story         free-text paragraph; renders italicized on the card.
      · tags          semicolons separate free-form tags (e.g. "national-park;hiking;family").
 */
-const SHEET_CSV_URL = "";
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTaYaD031CsA8keUhvPWwot0J07gbJ6PIseiehSiODGdHP1l6ZeoeKa9V-V_ExuLo--06gNnMsmfb7T/pub?output=csv";
 
 const _MONS=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 const _MONL=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -306,7 +306,8 @@ function deriveTrip(r){
     span:_spanDays(r.date_start,r.date_end||r.date_start),
     photo_folder:_photoFolder(r),
     photos:r.photos||[],friends:r.friends||[],tags:r.tags||[],
-    lat:Number(r.lat),lng:Number(r.lng)};
+    lat:(r.lat===''||r.lat==null)?NaN:Number(r.lat),
+    lng:(r.lng===''||r.lng==null)?NaN:Number(r.lng)};
 }
 
 function parseCSV(text){const rows=[];let row=[],f='',i=0,q=false;text=text.replace(/\r\n?/g,'\n');
