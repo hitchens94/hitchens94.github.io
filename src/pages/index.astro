@@ -44,7 +44,10 @@ function toObjects(text) {
 }
 
 // ---- Stats (build-time, with sensible fallbacks if a sheet is unreachable) ----
-let stats = { events: 147, venues: 42, trips: 40, countries: 5 };
+let stats = { events: 147, venues: 42, trips: 32, countries: 5 };
+
+// Mirror the travel log's own slugify so "Trips" grouping matches it exactly.
+const slugify = (s) => (s || "").toLowerCase().replace(/['']/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 const concertText = await fetchText(CONCERT_CSV);
 const travelText = await fetchText(TRAVEL_CSV);
 if (concertText) {
@@ -55,9 +58,14 @@ if (concertText) {
   }
 }
 if (travelText) {
-  const t = toObjects(travelText).filter(r => r.place || r.date_start);
+  // Match the travel log: valid rows are those with a date_start, and "Trips"
+  // groups rows sharing a trip_id (solo rows keyed by date_start + place), so a
+  // multi-stop trip counts once — same as tripGroups()/rowsToTrips() there.
+  // Raw row count is the log's "Destinations", NOT its "Trips".
+  const t = toObjects(travelText).filter(r => r.date_start);
   if (t.length) {
-    stats.trips = t.length;
+    const tripKeys = new Set(t.map(r => r.trip_id ? "id:" + r.trip_id : "solo:" + r.date_start + ":" + slugify(r.place)));
+    stats.trips = tripKeys.size;
     stats.countries = new Set(t.map(r => r.country).filter(Boolean)).size;
   }
 }
