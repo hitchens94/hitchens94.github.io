@@ -92,6 +92,21 @@ if (rss) {
   }).filter(Boolean);
   if (parsed.length) posts = parsed.slice(0, 4);
 }
+
+// ---- Trip snapshots: every image dropped directly into public/trips/ ----
+// Read at build time, so adding a photo to the folder makes it appear on the
+// next build — no list to maintain here. (Per-trip galleries in the travel log
+// are driven separately by the sheet's photo_folder/photos columns.)
+import { readdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+let tripPhotos = [];
+try {
+  const dir = fileURLToPath(new URL("../../public/trips", import.meta.url));
+  tripPhotos = readdirSync(dir)
+    .filter(f => /\.(jpe?g|png|webp)$/i.test(f))
+    .sort()
+    .map(f => "/trips/" + f);
+} catch { /* folder missing — gallery just won't render */ }
 ---
 
 <!DOCTYPE html>
@@ -217,6 +232,35 @@ if (rss) {
 
     .music-section iframe { border-radius: 12px; max-width: 420px; width: 100%; margin-top: 4px; }
 
+    /* ---- Snapshots gallery ---- */
+    .gallery-strip {
+      display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;
+      scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+    }
+    .gallery-strip::-webkit-scrollbar { height: 7px; }
+    .gallery-strip::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
+    .gthumb {
+      flex: 0 0 auto; height: 150px; border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--line); cursor: pointer; scroll-snap-align: start;
+      background: var(--card); transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+    }
+    .gthumb img { height: 100%; width: auto; display: block; object-fit: cover; }
+    .gthumb:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 10px 24px rgba(26,20,16,0.16); }
+
+    .lightbox {
+      position: fixed; inset: 0; z-index: 50; display: none;
+      align-items: center; justify-content: center; padding: 24px;
+      background: rgba(26,20,16,0.82); backdrop-filter: blur(3px); cursor: zoom-out;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img { max-width: 100%; max-height: 100%; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .lightbox .lb-close {
+      position: absolute; top: 18px; right: 22px; font-size: 1.6rem; line-height: 1;
+      color: #f8e4c9; background: none; border: none; cursor: pointer; opacity: 0.85;
+    }
+    .lightbox .lb-close:hover { opacity: 1; }
+
     @media (max-width: 560px) {
       body { padding: 48px 18px 72px; }
       .stats { grid-template-columns: repeat(2, 1fr); }
@@ -334,6 +378,19 @@ if (rss) {
       </div>
     </div>
 
+    {tripPhotos.length > 0 && (
+      <div class="section">
+        <p class="section-label">Snapshots</p>
+        <div class="gallery-strip">
+          {tripPhotos.map(src => (
+            <button class="gthumb" data-full={src} aria-label="View photo">
+              <img src={src} alt="" loading="lazy" />
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+
     <div class="section music-section">
       <p class="section-label">Currently Listening To</p>
       <iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write"
@@ -345,5 +402,28 @@ if (rss) {
     </div>
 
   </div>
+
+  {tripPhotos.length > 0 && (
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+      <button class="lb-close" id="lbClose" aria-label="Close">&times;</button>
+      <img id="lbImg" src="" alt="" />
+    </div>
+  )}
+
+  <script>
+    const lb = document.getElementById("lightbox");
+    const lbImg = document.getElementById("lbImg");
+    if (lb && lbImg) {
+      document.querySelectorAll(".gthumb").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          lbImg.setAttribute("src", btn.getAttribute("data-full"));
+          lb.classList.add("open");
+        });
+      });
+      const close = () => { lb.classList.remove("open"); lbImg.setAttribute("src", ""); };
+      lb.addEventListener("click", (e) => { if (e.target !== lbImg) close(); });
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+    }
+  </script>
 </body>
 </html>
