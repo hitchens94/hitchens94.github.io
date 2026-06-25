@@ -1,0 +1,40 @@
+name: Deploy to GitHub Pages
+
+# Builds the Astro site and publishes dist/ to GitHub Pages.
+#
+# This workflow is INERT until the repo's Pages source is switched from
+# "Deploy from a branch" to "GitHub Actions" (Settings → Pages → Build and
+# deployment → Source). Until then the live site keeps serving the old setup,
+# so committing this file does not touch production. Do the cutover only once
+# the ported site is verified.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; don't cancel an in-progress one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: withastro/action@v3
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
