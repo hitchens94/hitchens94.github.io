@@ -1,7 +1,8 @@
 ---
-// Homepage — "refined warm" redesign. Keeps the cream + monospace identity,
-// adds a live stats strip and an auto-updating Substack writing feed, both
-// fetched at BUILD time (no client JS, no load-flash, no CORS issues).
+// Homepage — "The Operator" brand reskin. Warm-stone neutrals on paper
+// (#F6F4EF) with a single burnt-orange signature (#BF5700), Archivo + Space
+// Mono + Newsreader. Live stats strip and auto-updating Substack writing feed,
+// both fetched at BUILD time (no client JS, no load-flash, no CORS issues).
 //
 // All network calls are wrapped with a timeout + fallback so a flaky sheet or
 // feed can never break or hang the build (important in CI).
@@ -115,28 +116,68 @@ try {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Julian John Fife</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f8e4c9'/%3E%3Ctext x='32' y='43' font-family='monospace' font-weight='700' font-size='28' fill='%23000000' text-anchor='middle'%3EJF%3C/text%3E%3C/svg%3E">
+  <!-- Favicon: the JF monogram — ink square, paper J, burnt-orange F -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231E1C19'/%3E%3Ctext x='21' y='45' font-family='Archivo,Helvetica,Arial,sans-serif' font-weight='800' font-size='34' fill='%23F6F4EF' text-anchor='middle'%3EJ%3C/text%3E%3Ctext x='43' y='45' font-family='Archivo,Helvetica,Arial,sans-serif' font-weight='800' font-size='34' fill='%23BF5700' text-anchor='middle'%3EF%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
   <style is:global>
     :root {
-      --bg: #f8e4c9;
-      --ink: #1a1410;
-      --muted: rgba(26, 20, 16, 0.62);
-      --line: rgba(26, 20, 16, 0.14);
-      --line-soft: rgba(26, 20, 16, 0.08);
-      --card: rgba(255, 255, 255, 0.28);
-      --accent: #b5491b;
+      /* —— Signature: burnt orange —— */
+      --orange: #BF5700;
+      --orange-deep: #9A4500;
+      --orange-soft: #F6E3D2;
+      --on-orange: #FFFFFF;
+      --on-orange-dim: #F6D8C2;
+
+      /* —— Ink + warm-stone neutral ramp —— */
+      --ink: #1E1C19;
+      --stone-700: #43403A;
+      --stone-600: #635E55;
+      --stone-400: #9C968A;
+      --stone-300: #C3BEB3;
+      --stone-200: #E3E0D8;
+      --stone-100: #EEEBE3;
+      --paper: #F6F4EF;
+      --white: #FFFFFF;
+
+      /* —— Semantic aliases (back-compat with existing rules) —— */
+      --bg: var(--paper);
+      --accent: var(--orange);
+      --muted: var(--stone-600);
+      --faint: var(--stone-400);
+      --line: var(--stone-200);
+      --line-soft: var(--stone-100);
+      --card: var(--white);
+
+      /* —— Type —— */
+      --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+      --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "Space Mono", "SFMono-Regular", ui-monospace, monospace;
+      --font-editorial: "Newsreader", Georgia, "Times New Roman", serif;
+
+      /* —— Radius —— */
+      --r-sm: 4px;
+      --r-md: 6px;
+      --r-lg: 10px;
+      --r-xl: 12px;
+
+      /* —— Shadows (warm-toned, low and soft) —— */
+      --shadow-sm: 0 1px 2px rgba(30, 25, 15, 0.06);
+      --shadow-md: 0 4px 14px -6px rgba(30, 25, 15, 0.14);
+      --shadow-lg: 0 18px 40px -22px rgba(30, 25, 15, 0.30);
+
+      /* —— Motion —— */
+      --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background-color: var(--bg);
-      color: var(--ink);
-      font-family: 'Source Code Pro', monospace;
+      background-color: var(--paper);
+      color: var(--stone-700);
+      font-family: var(--font-body);
       font-size: 16px;
-      line-height: 1.65;
+      line-height: 1.6;
       padding: 72px 24px 96px;
       -webkit-font-smoothing: antialiased;
     }
@@ -146,65 +187,96 @@ try {
     a:hover { text-decoration: underline; }
 
     /* ---- Header ---- */
-    .header { display: flex; align-items: center; gap: 22px; margin-bottom: 10px; }
+    .header { display: flex; align-items: center; gap: 22px; margin-bottom: 12px; }
     .profile-photo {
       width: 84px; height: 84px; min-width: 84px; border-radius: 50%;
-      object-fit: cover; border: 2px solid rgba(255,255,255,0.5);
-      box-shadow: 0 6px 20px rgba(26,20,16,0.14);
+      object-fit: cover; border: 2px solid var(--white);
+      box-shadow: var(--shadow-md);
     }
-    h1 { font-size: 2.05rem; font-weight: 700; line-height: 1.1; letter-spacing: -0.5px; }
-    .tagline { font-size: 0.95rem; color: var(--muted); margin: 6px 0 0; }
-    .tagline-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    h1 {
+      font-family: var(--font-display); font-size: 2.4rem; font-weight: 800;
+      line-height: 1.0; letter-spacing: -0.035em; color: var(--ink);
+    }
+    .tagline { font-size: 0.98rem; color: var(--stone-600); margin: 9px 0 0; }
+    .tagline-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
     .chip {
-      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em;
-      padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px;
-      color: var(--muted); background: var(--card);
+      font-family: var(--font-mono); font-size: 0.64rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 4px 11px; border: 1px solid var(--stone-200); border-radius: 999px;
+      color: var(--stone-600); background: var(--white);
     }
 
-    /* ---- Stats strip ---- */
+    /* ---- Stats strip — brand tile treatment (ink / paper / paper / orange) ---- */
     .stats {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-      margin: 30px 0 40px;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      margin: 32px 0 44px;
     }
     .stat {
-      border: 1px solid var(--line); border-radius: 12px; padding: 14px 12px;
-      background: var(--card); text-align: center;
-      transition: transform 0.18s, border-color 0.18s, background 0.18s;
+      border: 1px solid transparent; border-radius: var(--r-md); padding: 18px 16px;
+      text-align: left;
+      transition: transform 0.16s var(--ease), border-color 0.16s, box-shadow 0.16s;
     }
-    a.stat:hover { text-decoration: none; transform: translateY(-3px); border-color: var(--accent); background: rgba(255,255,255,0.45); }
-    .stat .num { display: block; font-size: 1.7rem; font-weight: 700; line-height: 1; letter-spacing: -1px; }
-    .stat .lbl { display: block; margin-top: 7px; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    a.stat:hover { text-decoration: none; transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .stat .num {
+      display: block; font-family: var(--font-display); font-size: 2.1rem;
+      font-weight: 800; line-height: 1; letter-spacing: -0.02em;
+    }
+    .stat .lbl {
+      display: block; margin-top: 8px; font-family: var(--font-mono); font-size: 0.6rem;
+      font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .stat-dark { background: var(--ink); }
+    .stat-dark .num { color: var(--white); }
+    .stat-dark .lbl { color: var(--orange); }
+    .stat-light { background: var(--white); border-color: var(--stone-200); }
+    .stat-light .num { color: var(--ink); }
+    .stat-light .lbl { color: var(--stone-400); }
+    .stat-accent { background: var(--orange); }
+    .stat-accent .num { color: var(--white); }
+    .stat-accent .lbl { color: var(--on-orange-dim); }
+    a.stat-light:hover { border-color: var(--stone-300); }
 
     /* ---- Sections ---- */
-    .section { margin-bottom: 44px; }
+    .section { margin-bottom: 48px; }
     .section-label {
-      font-weight: 700; font-size: 0.74rem; letter-spacing: 0.14em;
-      text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
-      display: flex; align-items: center; gap: 12px;
+      font-family: var(--font-mono); font-weight: 700; font-size: 0.7rem;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--orange);
+      margin-bottom: 18px; display: flex; align-items: center; gap: 14px;
     }
-    .section-label::after { content: ""; flex: 1; height: 1px; background: var(--line-soft); }
+    .section-label::after { content: ""; flex: 1; height: 1px; background: var(--stone-200); }
 
     .list { list-style: none; }
-    .list li { padding: 9px 0; border-bottom: 1px solid var(--line-soft); display: flex; gap: 12px; align-items: baseline; }
+    .list li { padding: 10px 0; border-bottom: 1px solid var(--stone-200); display: flex; gap: 14px; align-items: baseline; }
     .list li:last-child { border-bottom: none; }
-    .list .year { font-size: 0.8rem; color: var(--muted); min-width: 3.2em; font-weight: 600; }
-    .list .lead::before { content: ""; }
-    .restaurant-list a { transition: padding-left 0.18s; }
-    .restaurant-list a:hover { padding-left: 6px; }
-    .restaurant-list a:hover::before { content: '\2192\00a0'; color: var(--accent); }
+    .list .year { font-family: var(--font-mono); font-size: 0.78rem; color: var(--stone-400); min-width: 3.4em; font-weight: 700; }
 
-    .subscribe-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; font-size: 0.85rem; color: var(--muted); transition: color 0.18s; }
-    .subscribe-link:hover { color: var(--accent); }
-    .subscribe-link img { height: 1em; }
+    /* Writing titles use the editorial serif (essay-headline role) */
+    .writing-list a {
+      font-family: var(--font-editorial); font-weight: 500; font-size: 1.16rem;
+      letter-spacing: -0.01em; line-height: 1.25; color: var(--ink);
+    }
+    .writing-list a:hover { color: var(--orange); text-decoration: none; }
+
+    .restaurant-list a { transition: padding-left 0.16s, color 0.16s; }
+    .restaurant-list a:hover { padding-left: 6px; color: var(--orange); text-decoration: none; }
+    .restaurant-list a:hover::before { content: '\2192\00a0'; color: var(--orange); }
+
+    .subscribe-link {
+      display: inline-flex; align-items: center; gap: 7px; margin-top: 16px;
+      font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--stone-600); transition: color 0.16s;
+    }
+    .subscribe-link:hover { color: var(--orange); text-decoration: none; }
+    .subscribe-link img { height: 1.1em; }
 
     .longhorns-logo, .inline-flag { height: 1em; vertical-align: middle; margin-left: 4px; }
 
     /* hover pic (bio) */
-    .hover-pic { position: relative; cursor: pointer; border-bottom: 1px dotted var(--muted); }
+    .hover-pic { position: relative; cursor: pointer; border-bottom: 1px dotted var(--stone-400); }
     .hover-pic .hover-tooltip {
       display: none; position: absolute; bottom: calc(100% + 8px); left: 50%;
-      transform: translateX(-50%); width: 120px; height: 120px; border-radius: 12px;
-      overflow: hidden; box-shadow: 0 10px 28px rgba(26,20,16,0.28); z-index: 10; pointer-events: none;
+      transform: translateX(-50%); width: 120px; height: 120px; border-radius: var(--r-xl);
+      overflow: hidden; box-shadow: 0 10px 28px rgba(30,25,15,0.28); z-index: 10; pointer-events: none;
     }
     .hover-pic .hover-tooltip img { width: 100%; height: 100%; object-fit: cover; }
     .hover-pic:hover .hover-tooltip { display: block; }
@@ -212,59 +284,63 @@ try {
     /* ---- Connect ---- */
     .social-group { margin-bottom: 18px; }
     .social-group:last-child { margin-bottom: 0; }
-    .social-group-label { font-size: 0.78rem; color: var(--muted); margin-bottom: 8px; }
+    .social-group-label {
+      font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--stone-400); margin-bottom: 10px;
+    }
     .social-icons { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
-    .social-icons a { display: inline-block; width: 26px; height: 26px; opacity: 0.8; transition: opacity 0.18s, transform 0.18s; }
+    .social-icons a { display: inline-block; width: 26px; height: 26px; opacity: 0.85; transition: opacity 0.16s, transform 0.16s; }
     .social-icons a:hover { opacity: 1; transform: translateY(-2px); text-decoration: none; }
-    .social-icons a svg { width: 100%; height: 100%; fill: var(--ink); }
+    .social-icons a svg { width: 100%; height: 100%; fill: var(--ink); transition: fill 0.16s; }
+    .social-icons a:hover svg { fill: var(--orange); }
 
     /* ---- Big link cards ---- */
-    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .big-link {
-      display: block; border: 1px solid var(--line); border-radius: 14px; padding: 20px;
-      background: var(--card); transition: background 0.18s, transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+      display: block; border: 1px solid var(--stone-200); border-radius: var(--r-lg); padding: 22px 24px;
+      background: var(--white); transition: transform 0.16s var(--ease), border-color 0.16s, box-shadow 0.16s;
     }
-    .big-link:hover { text-decoration: none; transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 12px 30px rgba(26,20,16,0.12); background: rgba(255,255,255,0.45); }
-    .big-link .title { display: block; font-weight: 700; font-size: 1.02rem; }
-    .big-link .title .arrow { transition: margin-left 0.18s; display: inline-block; }
+    .big-link:hover { text-decoration: none; transform: translateY(-3px); border-color: var(--stone-300); box-shadow: var(--shadow-md); }
+    .big-link .title { display: block; font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; letter-spacing: -0.02em; color: var(--ink); }
+    .big-link .title .arrow { transition: margin-left 0.16s; display: inline-block; color: var(--orange); }
     .big-link:hover .title .arrow { margin-left: 6px; }
-    .big-link .sub { display: block; font-size: 0.82rem; color: var(--muted); margin-top: 6px; line-height: 1.5; }
-    .cooking-card .cooking-logo { height: 52px; width: auto; display: block; margin-bottom: 12px; border-radius: 8px; }
+    .big-link .sub { display: block; font-size: 0.85rem; color: var(--stone-600); margin-top: 7px; line-height: 1.55; }
+    .cooking-card .cooking-logo { height: 52px; width: auto; display: block; margin-bottom: 12px; border-radius: var(--r-md); }
 
-    .music-section iframe { border-radius: 12px; max-width: 420px; width: 100%; margin-top: 4px; }
+    .music-section iframe { border-radius: var(--r-xl); max-width: 420px; width: 100%; margin-top: 4px; }
 
     /* ---- Snapshots gallery ---- */
     .gallery-strip {
       display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;
       scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
-      scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+      scrollbar-width: thin; scrollbar-color: var(--stone-300) transparent;
     }
     .gallery-strip::-webkit-scrollbar { height: 7px; }
-    .gallery-strip::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
+    .gallery-strip::-webkit-scrollbar-thumb { background: var(--stone-300); border-radius: 999px; }
     .gthumb {
-      flex: 0 0 auto; height: 150px; border-radius: 12px; overflow: hidden;
-      border: 1px solid var(--line); cursor: pointer; scroll-snap-align: start;
-      background: var(--card); transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+      flex: 0 0 auto; height: 150px; border-radius: var(--r-lg); overflow: hidden;
+      border: 1px solid var(--stone-200); cursor: pointer; scroll-snap-align: start;
+      background: var(--white); transition: transform 0.16s, border-color 0.16s, box-shadow 0.16s;
     }
     .gthumb img { height: 100%; width: auto; display: block; object-fit: cover; }
-    .gthumb:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 10px 24px rgba(26,20,16,0.16); }
+    .gthumb:hover { transform: translateY(-3px); border-color: var(--orange); box-shadow: var(--shadow-md); }
 
     .lightbox {
       position: fixed; inset: 0; z-index: 50; display: none;
       align-items: center; justify-content: center; padding: 24px;
-      background: rgba(26,20,16,0.82); backdrop-filter: blur(3px); cursor: zoom-out;
+      background: rgba(30,25,15,0.82); backdrop-filter: blur(3px); cursor: zoom-out;
     }
     .lightbox.open { display: flex; }
-    .lightbox img { max-width: 100%; max-height: 100%; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .lightbox img { max-width: 100%; max-height: 100%; border-radius: var(--r-xl); box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
     .lightbox .lb-close {
       position: absolute; top: 18px; right: 22px; font-size: 1.6rem; line-height: 1;
-      color: #f8e4c9; background: none; border: none; cursor: pointer; opacity: 0.85;
+      color: var(--paper); background: none; border: none; cursor: pointer; opacity: 0.85;
     }
     .lightbox .lb-close:hover { opacity: 1; }
     .lightbox .lb-nav {
       position: absolute; top: 50%; transform: translateY(-50%);
-      font-size: 2.6rem; line-height: 1; color: #f8e4c9; background: none; border: none;
-      cursor: pointer; opacity: 0.7; padding: 10px 16px; transition: opacity 0.18s; user-select: none;
+      font-size: 2.6rem; line-height: 1; color: var(--paper); background: none; border: none;
+      cursor: pointer; opacity: 0.7; padding: 10px 16px; transition: opacity 0.16s; user-select: none;
     }
     .lightbox .lb-nav:hover { opacity: 1; }
     .lightbox .lb-prev { left: 6px; }
@@ -274,7 +350,7 @@ try {
       body { padding: 48px 18px 72px; }
       .stats { grid-template-columns: repeat(2, 1fr); }
       .cards { grid-template-columns: 1fr; }
-      h1 { font-size: 1.7rem; }
+      h1 { font-size: 1.9rem; }
       .header { gap: 16px; }
       .profile-photo { width: 68px; height: 68px; min-width: 68px; }
     }
@@ -298,16 +374,16 @@ try {
 
     <!-- Stats strip (live, baked at build) -->
     <div class="stats">
-      <a class="stat" href="/concert-log" title="Live events log">
+      <a class="stat stat-dark" href="/concert-log" title="Live events log">
         <span class="num">{stats.events}</span><span class="lbl">Live events</span>
       </a>
-      <a class="stat" href="/concert-log" title="Live events log">
+      <a class="stat stat-light" href="/concert-log" title="Live events log">
         <span class="num">{stats.venues}</span><span class="lbl">Venues</span>
       </a>
-      <a class="stat" href="/travel-log" title="Travel log">
+      <a class="stat stat-light" href="/travel-log" title="Travel log">
         <span class="num">{stats.trips}</span><span class="lbl">Trips</span>
       </a>
-      <a class="stat" href="/travel-log" title="Travel log">
+      <a class="stat stat-accent" href="/travel-log" title="Travel log">
         <span class="num">{stats.countries}</span><span class="lbl">Countries</span>
       </a>
     </div>
@@ -324,7 +400,7 @@ try {
 
     <div class="section">
       <p class="section-label">Writing</p>
-      <ul class="list">
+      <ul class="list writing-list">
         {posts.map(p => (
           <li><span class="year">{p.year}</span><a href={p.url} target="_blank" rel="noopener noreferrer">{p.title}</a></li>
         ))}
