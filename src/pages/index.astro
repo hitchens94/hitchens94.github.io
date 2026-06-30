@@ -230,7 +230,8 @@ try {
     .stat-dark .lbl { color: var(--orange); }
     .stat-light { background: var(--white); border-color: var(--stone-200); }
     .stat-light .num { color: var(--ink); }
-    .stat-light .lbl { color: var(--stone-400); }
+    /* stone-600 (not -400) for AA contrast on the white tiles: ~6.4:1 vs ~2.9:1 */
+    .stat-light .lbl { color: var(--stone-600); }
     .stat-accent { background: var(--orange); }
     .stat-accent .num { color: var(--white); }
     .stat-accent .lbl { color: var(--on-orange-dim); }
