@@ -1,0 +1,111 @@
+---
+// /writing — the full Substack archive, fetched at BUILD time (no client JS, no
+// load-flash, no CORS). The homepage used to show the latest four; this shows
+// everything the feed carries.
+//
+// The fetch is wrapped in a timeout + fallback so a flaky feed can never break
+// or hang the build in CI.
+import Base from "../layouts/Base.astro";
+
+const SUBSTACK_RSS = "https://julianfife.substack.com/feed";
+
+async function fetchText(url, ms = 10000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    return res.ok ? await res.text() : null;
+  } catch { return null; } finally { clearTimeout(t); }
+}
+
+function decode(s) {
+  return s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+          .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+          .replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').trim();
+}
+
+// Strip tags, collapse whitespace, and cut on a word boundary for the blurb.
+function summarize(html, max = 180) {
+  const text = decode(html).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  if (text.length <= max) return text;
+  return text.slice(0, text.lastIndexOf(" ", max)) + "…";
+}
+
+let posts = [
+  { title: "Tanner", url: "https://julianfife.substack.com/p/tanner", year: "2026", blurb: "" },
+  { title: "James Talarico Is Texas", url: "https://julianfife.substack.com/p/james-talarico-is-texas", year: "2026", blurb: "" },
+];
+
+const rss = await fetchText(SUBSTACK_RSS);
+if (rss) {
+  const items = [...rss.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(m => m[1]);
+  const parsed = items.map(it => {
+    const title = (it.match(/<title>([\s\S]*?)<\/title>/) || [])[1];
+    const link = (it.match(/<link>([\s\S]*?)<\/link>/) || [])[1];
+    const date = (it.match(/<pubDate>([\s\S]*?)<\/pubDate>/) || [])[1] || "";
+    const year = (date.match(/\b(20\d{2})\b/) || [])[1] || "";
+    const desc = (it.match(/<description>([\s\S]*?)<\/description>/) || [])[1] || "";
+    return title && link
+      ? { title: decode(title), url: decode(link), year, blurb: summarize(desc) }
+      : null;
+  }).filter(Boolean);
+  if (parsed.length) posts = parsed;
+}
+---
+
+<Base
+  title="Writing — Julian Fife"
+  heading="Writing"
+  tagline="Essays, published on Substack. Mostly about people, and mostly about Texas."
+>
+  <div class="section">
+    <p class="section-label">{posts.length} {posts.length === 1 ? "essay" : "essays"}</p>
+    <ul class="writing-list">
+      {posts.map(p => (
+        <li>
+          <a href={p.url} target="_blank" rel="noopener noreferrer">
+            <span class="w-year">{p.year}</span>
+            <span class="w-body">
+              <span class="w-title">{p.title}</span>
+              {p.blurb && <span class="w-blurb">{p.blurb}</span>}
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <a href="https://julianfife.substack.com/" target="_blank" rel="noopener noreferrer" class="subscribe-link">
+      <img src="/substack.png" alt="">subscribe on substack &rarr;
+    </a>
+  </div>
+
+  <style>
+    .writing-list { list-style: none; }
+    .writing-list li { border-bottom: 1px solid var(--stone-200); }
+    .writing-list li:last-child { border-bottom: none; }
+    .writing-list a {
+      display: grid; grid-template-columns: 3.6rem 1fr; gap: 16px;
+      align-items: baseline; padding: 18px 2px;
+      transition: padding-left 0.16s var(--ease);
+    }
+    .writing-list a:hover { text-decoration: none; padding-left: 6px; }
+    .w-year {
+      font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700;
+      color: var(--stone-600);
+    }
+    .w-title {
+      display: block; font-family: var(--font-editorial); font-weight: 500;
+      font-size: 1.28rem; letter-spacing: -0.01em; line-height: 1.25; color: var(--ink);
+      transition: color 0.16s;
+    }
+    .writing-list a:hover .w-title { color: var(--orange); }
+    .w-blurb {
+      display: block; margin-top: 6px; font-size: 0.88rem; line-height: 1.55;
+      color: var(--stone-600); max-width: 60ch;
+    }
+
+    @media (max-width: 560px) {
+      .writing-list a { grid-template-columns: 1fr; gap: 4px; }
+      .w-title { font-size: 1.14rem; }
+    }
+  </style>
+</Base>

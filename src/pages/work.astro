@@ -1,0 +1,177 @@
+---
+// /work — capabilities-first, layered for two readers: prose up top for the
+// curious stranger, a compact skills/education block and resume download below
+// for someone evaluating.
+//
+// Deliberately names no employer. Julian's current firm is described only as
+// "a family office investing in public companies via structured debt and equity
+// instruments" (the firm's own words). The resume PDF does name employers —
+// that's intended: the goal is keeping company names out of indexable page
+// text, not out of the resume.
+//
+// Also deliberate: no links to, screenshots of, or counts of the internal tools
+// he builds. Those live on his employer's infrastructure and hold portfolio,
+// filings, and NDA data. A public synthetic-data demo is planned as separate,
+// carefully-scoped work — see the note in the Building capability below.
+import Base from "../layouts/Base.astro";
+
+const capabilities = [
+  {
+    name: "Investment analysis & diligence",
+    body: "I evaluate public companies as investment prospects — reading the filings, pressure-testing the story, computing what a given structure actually returns. Where the numbers and the narrative disagree, the numbers usually win.",
+  },
+  {
+    name: "Data & pattern-finding",
+    body: "Most of what I do starts as a large, ugly dataset. I compile the monthly reporting that tells our investment team whether current strategy is working, and pull out the trends that argue for changing it.",
+  },
+  {
+    name: "Building & automation",
+    body: "I write the internal tooling our investment team uses daily — dashboards, calculators, pipeline trackers — mostly in Python and JavaScript. Finding the manual process that shouldn't be manual and quietly deleting it is the part of the job I'd do for free.",
+  },
+  {
+    name: "Modeling & deal structuring",
+    body: "Structured debt and equity instruments, and before that municipal financings. I build the model, find the structure that fits the situation, and draft the term sheet that reflects it.",
+  },
+  {
+    name: "Execution & relationships",
+    body: "I carry transactions from the first call through to close, which means the analysis and the relationship are the same job. Earlier in my career I closed several hundred of them in small-business lending.",
+  },
+  {
+    name: "Leading",
+    body: "I manage a direct report who runs the front of our outreach effort.",
+  },
+];
+
+const skills = [
+  { label: "Languages", items: "JavaScript · Python · SQL · Visual Basic" },
+  { label: "Software", items: "Excel · Power BI · Tableau · Salesforce · PowerPoint" },
+  { label: "Spoken", items: "English (fluent) · French (intermediate)" },
+  { label: "Credential", items: "MSRB Series 50 — Municipal Advisor" },
+];
+
+const education = [
+  {
+    school: "The University of Texas at Austin",
+    detail: "Master of Business Administration — McCombs School of Business",
+    year: "2023",
+  },
+  {
+    school: "The University of Texas at Austin",
+    detail: "BA, Economics · Minor in Mathematics — College of Liberal Arts",
+    year: "2017",
+  },
+];
+---
+
+<Base
+  title="Work — Julian Fife"
+  heading="Work"
+  tagline="I'm an investment associate at a family office that invests in public companies through structured debt and equity instruments. I've been there since 2022."
+>
+  <div class="section">
+    <p class="section-label">What I'm good at</p>
+    <div class="caps">
+      {capabilities.map(c => (
+        <div class="cap">
+          <h2 class="cap-name">{c.name}</h2>
+          <p class="cap-body">{c.body}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-label">Education</p>
+    <ul class="list edu-list">
+      {education.map(e => (
+        <li>
+          <span class="year">{e.year}</span>
+          <span>
+            <span class="edu-school">{e.school}</span>
+            <span class="edu-detail">{e.detail}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <div class="section">
+    <p class="section-label">Skills</p>
+    <dl class="skills">
+      {skills.map(s => (
+        <div class="skill-row">
+          <dt>{s.label}</dt>
+          <dd>{s.items}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+
+  <div class="section">
+    <p class="section-label">The long version</p>
+    <div class="resume-row">
+      <a href="/resume.pdf" class="resume-btn" target="_blank" rel="noopener noreferrer">
+        Download resume <span class="arrow">&darr;</span>
+      </a>
+      <a href="https://www.linkedin.com/in/julian-fife/" class="resume-alt" target="_blank" rel="noopener noreferrer">
+        or find me on LinkedIn &rarr;
+      </a>
+    </div>
+  </div>
+
+  <style>
+    /* Capabilities — editorial serif for the body, so this reads as prose
+       rather than as a bulleted competency matrix. */
+    .caps { display: flex; flex-direction: column; gap: 30px; }
+    .cap-name {
+      font-family: var(--font-display); font-size: 1.06rem; font-weight: 700;
+      letter-spacing: -0.015em; color: var(--ink); margin-bottom: 7px;
+    }
+    .cap-body {
+      font-family: var(--font-editorial); font-size: 1.09rem; line-height: 1.62;
+      color: var(--stone-700); max-width: 62ch;
+    }
+
+    .edu-list li { align-items: baseline; }
+    .edu-school { display: block; font-weight: 600; color: var(--ink); }
+    .edu-detail { display: block; font-size: 0.88rem; color: var(--stone-600); margin-top: 2px; }
+
+    .skills { display: flex; flex-direction: column; }
+    .skill-row {
+      display: grid; grid-template-columns: 8.5rem 1fr; gap: 20px;
+      padding: 12px 0; border-bottom: 1px solid var(--stone-200);
+    }
+    .skill-row:last-child { border-bottom: none; }
+    .skill-row dt {
+      font-family: var(--font-mono); font-size: 0.64rem; font-weight: 700;
+      letter-spacing: 0.09em; text-transform: uppercase; color: var(--stone-600);
+      padding-top: 4px;
+    }
+    .skill-row dd { color: var(--stone-700); font-size: 0.95rem; }
+
+    .resume-row { display: flex; flex-wrap: wrap; align-items: center; gap: 22px; }
+    .resume-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--ink); color: var(--white); border-radius: var(--r-md);
+      padding: 13px 22px; font-family: var(--font-display); font-weight: 700;
+      font-size: 0.95rem; letter-spacing: -0.01em;
+      transition: background 0.16s, transform 0.16s var(--ease), box-shadow 0.16s;
+    }
+    .resume-btn:hover {
+      background: var(--orange); text-decoration: none;
+      transform: translateY(-2px); box-shadow: var(--shadow-md);
+    }
+    .resume-btn .arrow { color: var(--orange); transition: color 0.16s, transform 0.16s; }
+    .resume-btn:hover .arrow { color: var(--on-orange-dim); transform: translateY(2px); }
+    .resume-alt {
+      font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--stone-600); transition: color 0.16s;
+    }
+    .resume-alt:hover { color: var(--orange); text-decoration: none; }
+
+    @media (max-width: 560px) {
+      .skill-row { grid-template-columns: 1fr; gap: 4px; }
+      .cap-body { font-size: 1.02rem; }
+    }
+  </style>
+</Base>

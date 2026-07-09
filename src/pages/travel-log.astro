@@ -3,6 +3,21 @@
 // is:inline so Astro emits them verbatim; only relative asset paths were rewritten
 // to root-absolute (/people for friend photos, /trips for trip galleries) so they
 // resolve from the /travel-log/ route. Still fetches the Google Sheet client-side.
+
+// Snapshots strip (moved here from the homepage when it became a landing page).
+// Every loose image in public/trips/ — read at build time, so dropping a photo
+// into the folder makes it appear on the next build. Per-trip galleries below
+// are separate: those come from the sheet's photo_folder/photos columns.
+import { readdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+let tripPhotos = [];
+try {
+  const dir = fileURLToPath(new URL("../../public/trips", import.meta.url));
+  tripPhotos = readdirSync(dir)
+    .filter(f => /\.(jpe?g|png|webp)$/i.test(f))
+    .sort()
+    .map(f => "/trips/" + f);
+} catch { /* folder missing — strip just won't render */ }
 ---
 
 <!DOCTYPE html>
@@ -103,6 +118,10 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
 .gthumb:hover{border-color:var(--gold);transform:translateY(-2px)}
 .gthumb img{width:100%;height:100%;object-fit:cover;display:block}
 .gthumb .more{position:absolute;inset:0;background:rgba(0,0,0,.55);color:var(--gold);display:flex;align-items:center;justify-content:center;font-family:"Big Shoulders Display",sans-serif;font-weight:800;font-size:22px;letter-spacing:.02em}
+/* snapshots strip (page-bottom, outside the map/timeline/stats tabs) */
+.snapshots{margin-top:46px;padding-top:26px;border-top:1px solid var(--line)}
+.snap-title{font-family:"Big Shoulders Display",sans-serif;font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+.snapshots .gallery .gthumb{padding:0;width:132px;height:99px}
 /* lightbox */
 #lightbox{position:fixed;inset:0;background:rgba(8,7,11,.92);display:none;align-items:center;justify-content:center;z-index:1500;backdrop-filter:blur(6px)}
 #lightbox.show{display:flex}
@@ -205,6 +224,18 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:30px 0 60px;font
   </section>
   <main class="timeline" id="timeline"></main>
   <section class="statsview" id="statsview"></section>
+  {tripPhotos.length > 0 && (
+    <section class="snapshots">
+      <h2 class="snap-title">Snapshots</h2>
+      <div class="gallery" id="snapStrip">
+        {tripPhotos.map(src => (
+          <button class="gthumb" type="button" data-full={src} aria-label="View photo">
+            <img src={src} alt="" loading="lazy" />
+          </button>
+        ))}
+      </div>
+    </section>
+  )}
   <footer id="foot"></footer>
 </div>
 <div id="lightbox" role="dialog" aria-label="Photo viewer">
@@ -641,6 +672,16 @@ document.addEventListener('keydown',e=>{
     else if(rows)console.warn('Travel sheet loaded but had no rows; using built-in list.');
   }catch(e){console.warn('Travel sheet load failed; using built-in list.',e);}
   boot();
+})();
+
+/* Snapshots strip — server-rendered above, so it needs no sheet data. Reuses
+   the per-trip lightbox rather than shipping a second one. */
+(function(){
+  const strip=document.getElementById('snapStrip');
+  if(!strip)return;
+  const thumbs=[...strip.querySelectorAll('.gthumb')];
+  const paths=thumbs.map(t=>t.dataset.full);
+  thumbs.forEach((t,i)=>t.onclick=()=>openLightbox(paths,i,'Snapshots'));
 })();
 </script>
 </body>

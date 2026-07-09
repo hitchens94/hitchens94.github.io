@@ -1,0 +1,198 @@
+---
+// Shared shell for the brand-side pages: homepage, /work, /cooking, /writing.
+// Carries "The Operator" tokens (burnt orange on warm paper; Archivo + Space
+// Mono + Newsreader) that used to live inline in index.astro.
+//
+// The two logs (/concert-log, /travel-log) are NOT built on this layout — they
+// are verbatim dark-theme ports and keep their own inline <style>.
+const { title, tagline, back = true } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <!-- Favicon: the JF monogram — ink square, paper J, burnt-orange F -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231E1C19'/%3E%3Ctext x='21' y='45' font-family='Archivo,Helvetica,Arial,sans-serif' font-weight='800' font-size='34' fill='%23F6F4EF' text-anchor='middle'%3EJ%3C/text%3E%3Ctext x='43' y='45' font-family='Archivo,Helvetica,Arial,sans-serif' font-weight='800' font-size='34' fill='%23BF5700' text-anchor='middle'%3EF%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+  <style is:global>
+    :root {
+      /* —— Signature: burnt orange —— */
+      --orange: #BF5700;
+      --orange-deep: #9A4500;
+      --orange-soft: #F6E3D2;
+      --on-orange: #FFFFFF;
+      --on-orange-dim: #F6D8C2;
+
+      /* —— Ink + warm-stone neutral ramp —— */
+      --ink: #1E1C19;
+      --stone-700: #43403A;
+      --stone-600: #635E55;
+      --stone-400: #9C968A;
+      --stone-300: #C3BEB3;
+      --stone-200: #E3E0D8;
+      --stone-100: #EEEBE3;
+      --paper: #F6F4EF;
+      --white: #FFFFFF;
+
+      /* —— Semantic aliases —— */
+      --bg: var(--paper);
+      --accent: var(--orange);
+      --muted: var(--stone-600);
+      --faint: var(--stone-400);
+      --line: var(--stone-200);
+      --line-soft: var(--stone-100);
+      --card: var(--white);
+
+      /* —— Type —— */
+      --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+      --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "Space Mono", "SFMono-Regular", ui-monospace, monospace;
+      --font-editorial: "Newsreader", Georgia, "Times New Roman", serif;
+
+      /* —— Radius —— */
+      --r-sm: 4px;
+      --r-md: 6px;
+      --r-lg: 10px;
+      --r-xl: 12px;
+
+      /* —— Shadows (warm-toned, low and soft) —— */
+      --shadow-sm: 0 1px 2px rgba(30, 25, 15, 0.06);
+      --shadow-md: 0 4px 14px -6px rgba(30, 25, 15, 0.14);
+      --shadow-lg: 0 18px 40px -22px rgba(30, 25, 15, 0.30);
+
+      /* —— Motion —— */
+      --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--paper);
+      color: var(--stone-700);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      padding: 72px 24px 96px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+
+    a { color: var(--ink); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ---- Back link (branch pages) ---- */
+    .backlink {
+      display: inline-flex; align-items: center; gap: 8px; margin-bottom: 40px;
+      font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--stone-600);
+      transition: color 0.16s, gap 0.16s;
+    }
+    .backlink:hover { color: var(--orange); gap: 12px; text-decoration: none; }
+
+    /* ---- Header ---- */
+    .header { display: flex; align-items: center; gap: 22px; margin-bottom: 12px; }
+    .profile-photo {
+      width: 84px; height: 84px; min-width: 84px; border-radius: 50%;
+      object-fit: cover; border: 2px solid var(--white);
+      box-shadow: var(--shadow-md);
+    }
+    h1 {
+      font-family: var(--font-display); font-size: 2.4rem; font-weight: 800;
+      line-height: 1.0; letter-spacing: -0.035em; color: var(--ink);
+    }
+    .tagline { font-size: 0.98rem; color: var(--stone-600); margin: 9px 0 0; }
+
+    /* Branch-page title block (no photo) */
+    .page-head { margin-bottom: 44px; }
+    .page-head h1 { font-size: 2.9rem; }
+    .page-head .tagline { margin-top: 12px; font-size: 1.05rem; max-width: 54ch; }
+
+    /* ---- Sections ---- */
+    .section { margin-bottom: 48px; }
+    .section:last-child { margin-bottom: 0; }
+    .section-label {
+      font-family: var(--font-mono); font-weight: 700; font-size: 0.7rem;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--orange);
+      margin-bottom: 18px; display: flex; align-items: center; gap: 14px;
+    }
+    .section-label::after { content: ""; flex: 1; height: 1px; background: var(--stone-200); }
+
+    .list { list-style: none; }
+    .list li { padding: 10px 0; border-bottom: 1px solid var(--stone-200); display: flex; gap: 14px; align-items: baseline; }
+    .list li:last-child { border-bottom: none; }
+    .list .year { font-family: var(--font-mono); font-size: 0.78rem; color: var(--stone-600); min-width: 3.4em; font-weight: 700; }
+
+    .subscribe-link {
+      display: inline-flex; align-items: center; gap: 7px; margin-top: 16px;
+      font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--stone-600); transition: color 0.16s;
+    }
+    .subscribe-link:hover { color: var(--orange); text-decoration: none; }
+    .subscribe-link img { height: 1.1em; }
+
+    .longhorns-logo, .inline-flag { height: 1em; vertical-align: middle; margin-left: 4px; }
+
+    /* hover pic (bio) */
+    .hover-pic { position: relative; cursor: pointer; border-bottom: 1px dotted var(--stone-400); }
+    .hover-pic .hover-tooltip {
+      display: none; position: absolute; bottom: calc(100% + 8px); left: 50%;
+      transform: translateX(-50%); width: 120px; height: 120px; border-radius: var(--r-xl);
+      overflow: hidden; box-shadow: 0 10px 28px rgba(30,25,15,0.28); z-index: 10; pointer-events: none;
+    }
+    .hover-pic .hover-tooltip img { width: 100%; height: 100%; object-fit: cover; }
+    .hover-pic:hover .hover-tooltip { display: block; }
+
+    /* ---- Social icons ---- */
+    .social-group { margin-bottom: 18px; }
+    .social-group:last-child { margin-bottom: 0; }
+    .social-group-label {
+      font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--stone-600); margin-bottom: 10px;
+    }
+    .social-icons { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+    .social-icons a { display: inline-block; width: 26px; height: 26px; opacity: 0.85; transition: opacity 0.16s, transform 0.16s; }
+    .social-icons a:hover { opacity: 1; transform: translateY(-2px); text-decoration: none; }
+    .social-icons a svg { width: 100%; height: 100%; fill: var(--ink); transition: fill 0.16s; }
+    .social-icons a:hover svg { fill: var(--orange); }
+
+    /* ---- Big link cards ---- */
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .big-link {
+      display: block; border: 1px solid var(--stone-200); border-radius: var(--r-lg); padding: 22px 24px;
+      background: var(--white); transition: transform 0.16s var(--ease), border-color 0.16s, box-shadow 0.16s;
+    }
+    .big-link:hover { text-decoration: none; transform: translateY(-3px); border-color: var(--stone-300); box-shadow: var(--shadow-md); }
+    .big-link .title { display: block; font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; letter-spacing: -0.02em; color: var(--ink); }
+    .big-link .title .arrow { transition: margin-left 0.16s; display: inline-block; color: var(--orange); }
+    .big-link:hover .title .arrow { margin-left: 6px; }
+    .big-link .sub { display: block; font-size: 0.85rem; color: var(--stone-600); margin-top: 7px; line-height: 1.55; }
+
+    @media (max-width: 560px) {
+      body { padding: 48px 18px 72px; }
+      .cards { grid-template-columns: 1fr; }
+      h1 { font-size: 1.9rem; }
+      .page-head h1 { font-size: 2.1rem; }
+      .header { gap: 16px; }
+      .profile-photo { width: 68px; height: 68px; min-width: 68px; }
+    }
+  </style>
+  <slot name="head" />
+</head>
+<body>
+  <div class="container">
+    {back && <a href="/" class="backlink">&larr; Julian Fife</a>}
+    {title && tagline && (
+      <div class="page-head">
+        <h1>{Astro.props.heading ?? title}</h1>
+        <p class="tagline">{tagline}</p>
+      </div>
+    )}
+    <slot />
+  </div>
+  <slot name="end" />
+</body>
+</html>
