@@ -1,0 +1,182 @@
+<!-- @dsCard group="Brand" viewport="1000x1400" subtitle="One-page overview of the whole system" name="Brand guide" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Julian Fife — Brand Guide</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap");
+:root{
+  --orange:#BF5700; --orange-deep:#9A4500; --orange-soft:#F6E3D2; --on-orange:#FFFFFF; --on-orange-dim:#F6D8C2;
+  --ink:#1E1C19; --stone-700:#43403A; --stone-600:#635E55; --stone-400:#9C968A; --stone-300:#C3BEB3;
+  --stone-200:#E3E0D8; --stone-100:#EEEBE3; --paper:#F6F4EF; --white:#FFFFFF;
+  --font-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --font-body:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --font-mono:"Space Mono","SFMono-Regular",ui-monospace,monospace;
+  --font-editorial:"Newsreader",Georgia,"Times New Roman",serif;
+  --r-sm:4px; --r-md:6px; --r-lg:10px; --r-xl:12px; --r-full:999px;
+}
+</style>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:var(--font-body); background:var(--stone-100); color:var(--ink); }
+  .sheet { width:1000px; margin:0 auto; background:var(--paper); }
+  .pad { padding:56px 64px; }
+  .rule { height:1px; background:var(--stone-200); }
+  .klab { font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--orange); margin:0 0 22px; }
+  h2.sec { font-family:var(--font-display); font-weight:700; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; color:var(--stone-400); margin:0 0 24px; }
+
+  /* cover */
+  .cover { background:var(--ink); color:var(--paper); padding:64px; display:flex; justify-content:space-between; align-items:flex-end; }
+  .cmark { position:relative; width:108px; height:108px; border-radius:var(--r-xl); background:var(--white); display:flex; align-items:center; justify-content:center; margin-bottom:34px; }
+  .cmark .jf { display:flex; font-family:var(--font-display); font-weight:800; font-size:48px; letter-spacing:-0.04em; line-height:1; }
+  .cmark .jf .j { color:var(--ink); position:relative; z-index:1; }
+  .cmark .jf .f { color:var(--orange); margin-left:-14px; }
+  .cover h1 { font-family:var(--font-display); font-weight:800; font-size:54px; line-height:0.95; letter-spacing:-0.035em; margin:0; }
+  .cover .sub { font-family:var(--font-mono); font-size:12px; letter-spacing:0.1em; color:var(--stone-400); margin-top:18px; }
+  .cover .right { text-align:right; font-family:var(--font-mono); font-size:11px; letter-spacing:0.08em; color:var(--stone-400); line-height:1.9; }
+
+  /* idea */
+  .idea { font-family:var(--font-editorial); font-weight:400; font-size:30px; line-height:1.35; letter-spacing:-0.01em; color:var(--ink); max-width:760px; }
+  .idea em { font-style:italic; color:var(--orange); }
+
+  /* logo row */
+  .logos { display:flex; gap:40px; align-items:center; flex-wrap:wrap; }
+  .lbox { display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .m { position:relative; width:92px; height:92px; border-radius:var(--r-xl); display:flex; align-items:center; justify-content:center; }
+  .m .jf { display:flex; font-family:var(--font-display); font-weight:800; font-size:40px; letter-spacing:-0.04em; line-height:1; }
+  .m .jf .j { position:relative; z-index:1; }
+  .m .jf .f { color:var(--orange); margin-left:-12px; }
+  .m i { position:absolute; top:10px; right:11px; width:9px; height:9px; border-radius:50%; background:var(--orange); }
+  .cap { font-family:var(--font-mono); font-size:9.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--stone-400); }
+  .stack { font-family:var(--font-display); font-weight:800; font-size:40px; line-height:0.92; letter-spacing:-0.035em; }
+
+  /* color */
+  .swrow { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; }
+  .chip { height:84px; border-radius:var(--r-md); }
+  .hex { font-family:var(--font-mono); font-size:10px; color:var(--stone-600); margin-top:8px; }
+  .cn { font-family:var(--font-mono); font-size:9px; color:var(--stone-400); }
+
+  /* type */
+  .tgrid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:32px; }
+  .tname { font-family:var(--font-mono); font-size:10px; letter-spacing:0.08em; color:var(--stone-400); margin-bottom:8px; }
+  .trole { font-family:var(--font-mono); font-size:10px; color:var(--orange); margin-top:10px; letter-spacing:0.04em; }
+
+  /* voice */
+  .vgrid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .vbox { border:1px solid var(--stone-200); border-radius:var(--r-md); padding:18px 20px; background:var(--white); }
+  .vtag { font-family:var(--font-mono); font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; }
+  .vline { font-size:15px; line-height:1.5; margin-top:10px; }
+
+  /* apps */
+  .apps { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .thumb { border:1px solid var(--stone-200); border-radius:var(--r-lg); overflow:hidden; background:var(--white); }
+  .thead { background:var(--ink); padding:16px 20px; display:flex; align-items:center; gap:11px; }
+  .tsq { width:34px; height:34px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; flex:none; }
+  .tsq .jf { display:flex; font-family:var(--font-display); font-weight:800; font-size:15px; letter-spacing:-0.04em; line-height:1; }
+  .tsq .jf .j { position:relative; z-index:1; }
+  .tsq .jf .f { color:var(--orange); margin-left:-4px; }
+  .tt { font-family:var(--font-display); font-weight:800; font-size:16px; color:var(--paper); letter-spacing:-0.02em; }
+  .tsub { font-family:var(--font-mono); font-size:9px; color:var(--stone-400); margin-top:2px; letter-spacing:0.06em; }
+  .tbody { padding:18px 20px; }
+  .th { font-family:var(--font-editorial); font-weight:500; font-size:19px; letter-spacing:-0.01em; color:var(--ink); }
+  .tmeta { font-family:var(--font-mono); font-size:9.5px; color:var(--stone-400); margin-top:6px; letter-spacing:0.06em; }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- cover -->
+  <div class="cover">
+    <div>
+      <div class="cmark"><div class="jf"><span class="j">J</span><span class="f">F</span></div></div>
+      <h1>Julian&nbsp;Fife</h1>
+      <div class="sub">PERSONAL BRAND SYSTEM · "THE OPERATOR" · 2026</div>
+    </div>
+    <div class="right">CREDIBLE · WARM · BUILT<br>BURNT ORANGE #BF5700<br>ARCHIVO / SPACE MONO / NEWSREADER</div>
+  </div>
+
+  <!-- idea -->
+  <div class="pad">
+    <p class="klab">The idea</p>
+    <div class="idea">A finance mind who writes and cooks — <em>precise about money, curious about everything else.</em> The brand looks like a well-set document made by someone with taste: confident type, a strict warm-neutral palette, and orange used the way a good editor uses a highlighter.</div>
+  </div>
+  <div class="rule"></div>
+
+  <!-- logo -->
+  <div class="pad">
+    <h2 class="sec">01 — Logo &amp; monogram</h2>
+    <div class="logos">
+      <div class="lbox"><div class="m" style="background:var(--ink);"><div class="jf"><span class="j" style="color:var(--paper);">J</span><span class="f">F</span></div><i></i></div><div class="cap">primary mark</div></div>
+      <div class="lbox"><div class="m" style="background:var(--white); border:1px solid var(--stone-200);"><div class="jf"><span class="j" style="color:var(--ink);">J</span><span class="f">F</span></div><i></i></div><div class="cap">reversed</div></div>
+      <div class="lbox"><div class="stack">JULIAN<br>FIFE</div><div class="cap">stacked wordmark</div></div>
+    </div>
+  </div>
+  <div class="rule"></div>
+
+  <!-- color -->
+  <div class="pad">
+    <h2 class="sec">02 — Color</h2>
+    <div class="swrow">
+      <div><div class="chip" style="background:var(--orange);"></div><div class="hex">#BF5700</div><div class="cn">signature</div></div>
+      <div><div class="chip" style="background:var(--orange-deep);"></div><div class="hex">#9A4500</div><div class="cn">deep</div></div>
+      <div><div class="chip" style="background:var(--ink);"></div><div class="hex">#1E1C19</div><div class="cn">ink</div></div>
+      <div><div class="chip" style="background:var(--stone-600);"></div><div class="hex">#635E55</div><div class="cn">stone</div></div>
+      <div><div class="chip" style="background:var(--stone-200);"></div><div class="hex">#E3E0D8</div><div class="cn">border</div></div>
+      <div><div class="chip" style="background:var(--paper); border:1px solid var(--stone-200);"></div><div class="hex">#F6F4EF</div><div class="cn">paper</div></div>
+    </div>
+  </div>
+  <div class="rule"></div>
+
+  <!-- type -->
+  <div class="pad">
+    <h2 class="sec">03 — Typography</h2>
+    <div class="tgrid">
+      <div>
+        <div class="tname">ARCHIVO</div>
+        <div style="font-family:var(--font-display); font-weight:800; font-size:48px; letter-spacing:-0.035em; line-height:1;">Aa</div>
+        <div class="trole">display · ui · body</div>
+      </div>
+      <div>
+        <div class="tname">SPACE MONO</div>
+        <div style="font-family:var(--font-mono); font-weight:700; font-size:44px; line-height:1;">Aa</div>
+        <div class="trole">labels · data · numerals</div>
+      </div>
+      <div>
+        <div class="tname">NEWSREADER</div>
+        <div style="font-family:var(--font-editorial); font-weight:500; font-size:48px; line-height:1;">Aa</div>
+        <div class="trole">long-form headlines only</div>
+      </div>
+    </div>
+  </div>
+  <div class="rule"></div>
+
+  <!-- voice -->
+  <div class="pad">
+    <h2 class="sec">04 — Voice</h2>
+    <div class="vgrid">
+      <div class="vbox"><div class="vtag" style="color:var(--orange);">› do</div><div class="vline" style="color:var(--stone-700);">"Notes on finance, food, and building."<br>"147 live shows. 42 venues. Still counting."</div></div>
+      <div class="vbox"><div class="vtag" style="color:var(--stone-400);">✕ don't</div><div class="vline" style="color:var(--stone-400);">"🚀 Unlocking Synergies in My Journey!"<br>"A Curated Collection Of My Thoughts."</div></div>
+    </div>
+  </div>
+  <div class="rule"></div>
+
+  <!-- apps -->
+  <div class="pad">
+    <h2 class="sec">05 — In use</h2>
+    <div class="apps">
+      <div class="thumb">
+        <div class="thead"><div class="tsq" style="background:var(--white);"><div class="jf"><span class="j" style="color:var(--ink);">J</span><span class="f">F</span></div></div><div><div class="tt">Compounding</div><div class="tsub">SUBSTACK · BY JULIAN FIFE</div></div></div>
+        <div class="tbody"><div class="th">James Talarico Is Texas</div><div class="tmeta">ESSAY · 6 MIN READ</div></div>
+      </div>
+      <div class="thumb">
+        <div class="thead" style="background:var(--paper); border-bottom:1px solid var(--stone-200);"><div class="tsq" style="background:var(--ink);"><div class="jf"><span class="j" style="color:var(--paper);">J</span><span class="f">F</span></div></div><div><div class="tt" style="color:var(--ink);">Julian Fife</div><div class="tsub" style="color:var(--stone-400);">WRITER · COOK · WEB BUILDER</div></div></div>
+        <div class="tbody"><div class="th" style="font-family:var(--font-display); font-weight:700; font-size:18px;">Read the latest essay</div><div class="tmeta">JULIANFIFE.COM</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
