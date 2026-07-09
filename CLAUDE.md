@@ -21,11 +21,30 @@ No test suite. "Verifying" means building and eyeballing in the browser (especia
 
 ## Pages
 
-- `src/pages/index.astro` — homepage / link hub. Static content.
-- `src/pages/concert-log.astro` — "Live Events": tabbed (Music / Stand-Up / Football) timeline + Leaflet map + stats. Routed at `/concert-log/`.
-- `src/pages/travel-log.astro` — map-first travel log. Routed at `/travel-log/`. A sibling of concert-log; they share CSS variables, a CSV parser, the dark theme, person-avatars, and Leaflet setup.
+The site is a **landing page plus five branches**. `/` is deliberately spare — bio, a text directory, personal socials — and every other kind of content lives on its own branch page.
 
-The two logs are currently **faithful ports** of the original HTML: the entire original `<style>` and app `<script>` are wrapped in `is:inline`, so Astro emits them **verbatim** (no bundling, scoping, or minification). The only edits made during the port were relative→root-absolute asset paths (see below). This means the logs are still two large single-file apps with duplicated logic — deduping them into `src/lib` + `src/components` is planned follow-up work, not yet done.
+- `src/pages/index.astro` — homepage. Bio + directory into the branches. No stats, no feeds.
+- `src/pages/work.astro` — capabilities, education, skills, resume download. Routed at `/work/`.
+- `src/pages/cooking.astro` — Fife Spice + Recipes cards, Austin restaurants, `@fifespice` socials. Routed at `/cooking/`.
+- `src/pages/writing.astro` — full Substack archive, fetched at build time. Routed at `/writing/`.
+- `src/pages/concert-log.astro` — "Live Events": tabbed (Music / Stand-Up / Football) timeline + Leaflet map + stats, plus the "Currently Listening To" embed. Routed at `/concert-log/`.
+- `src/pages/travel-log.astro` — map-first travel log, plus the "Snapshots" strip. Routed at `/travel-log/`. A sibling of concert-log; they share CSS variables, a CSV parser, the dark theme, person-avatars, and Leaflet setup.
+
+The directory labels ("Travel", "Live") intentionally do **not** match their routes (`/travel-log/`, `/concert-log/`) — the URLs were kept to avoid breaking inbound links.
+
+### Two themes, deliberately
+
+The four brand pages (`index`, `work`, `cooking`, `writing`) share `src/layouts/Base.astro`, which owns **"The Operator"** design tokens: burnt orange `#BF5700` on warm paper `#F6F4EF`, Archivo + Space Mono + Newsreader. Add a brand page by importing that layout; don't re-declare the tokens.
+
+The two logs are **not** on that layout. They remain **faithful ports** of the original HTML: the entire original `<style>` and app `<script>` are wrapped in `is:inline`, so Astro emits them **verbatim** (no bundling, scoping, or minification), and they keep their own **dark theme** (`#18161d` + gold `#e9b14a`). So the site currently ships two visual identities. Reskinning the logs onto The Operator is open follow-up work, as is deduping them into `src/lib` + `src/components`.
+
+Additions to the logs must therefore be written in *their* idiom, not the brand one — the Snapshots strip reuses travel-log's own `.gthumb` class and its global `openLightbox()` rather than shipping a second lightbox.
+
+## /work — what it may and may not say
+
+The page **names no employer.** Julian's current firm is described only as "a family office investing in public companies via structured debt and equity instruments." The resume at `public/resume.pdf` *does* name employers; that's intended — the goal is keeping company names out of indexable page text, not out of the resume.
+
+It also links to, screenshots, and counts **none** of the internal tools he builds. Those live on his employer's infrastructure (see the separate `jules-tools` repo) and hold portfolio positions, filings, and NDA/over-the-wall data. A public **synthetic-data demo**, built from scrubbed copies, is planned as separate and carefully-scoped work. Until then `/work` describes the building capability in prose only. Don't add tool links here.
 
 ## Data flow (the important architecture)
 
