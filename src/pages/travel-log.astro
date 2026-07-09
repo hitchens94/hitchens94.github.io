@@ -82,7 +82,10 @@ body{background:var(--paper);color:var(--stone-700);font-family:var(--font-displ
 .controls{position:sticky;top:0;z-index:600;background:rgba(246,244,239,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:14px 0;margin-top:2px}
 .controls .row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .search{flex:1;min-width:200px;position:relative}
-.search input{width:100%;background:var(--card);border:1px solid var(--line);color:var(--ink);font-family:var(--font-display);font-size:16px;padding:11px 14px 11px 38px;border-radius:2px;outline:none}
+.search input{width:100%;background:var(--card);border:1px solid var(--line);color:var(--ink);font-family:var(--font-display);font-size:16px;padding:11px 36px 11px 38px;border-radius:2px;outline:none}
+.search .clearq{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:24px;height:24px;padding:0;border:none;background:transparent;color:var(--stone-400);font-family:var(--font-mono);font-size:16px;line-height:1;cursor:pointer;border-radius:50%;display:none;align-items:center;justify-content:center;transition:color .15s,background .15s}
+.search .clearq.show{display:flex}
+.search .clearq:hover{color:var(--orange);background:var(--stone-100)}
 .search input:focus{border-color:var(--gold)}
 .search::before{content:"⌕";position:absolute;left:12px;top:8px;font-size:19px;color:var(--muted)}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
@@ -223,13 +226,13 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:30px 0 60px;font
   <header class="hero">
     <div class="kicker" id="kicker">A travel log</div>
     <h1>Places</h1>
-    <p class="sub">Every trip, every destination — national parks, foreign cities, scenic detours. Mapped, timelined, and remembered.</p>
+    <p class="sub">Every trip, every destination. National parks, foreign cities, scenic detours. Mapped, timelined, and remembered.</p>
   </header>
 </div>
 <div class="wrap"><div class="stats" id="statstrip"></div></div>
 <div class="controls"><div class="wrap">
   <div class="row">
-    <div class="search"><input id="q" type="text" placeholder="Search places, countries, friends, tags…" autocomplete="off"></div>
+    <div class="search"><input id="q" type="text" placeholder="Search places, countries, friends, tags…" autocomplete="off"><button class="clearq" id="clearQ" type="button" aria-label="Clear search">×</button></div>
     <div class="chips" id="countryChips"></div>
     <div class="chips" id="tagChips"></div>
     <button class="chip" id="orderBtn">▼ Newest</button>
@@ -508,14 +511,21 @@ function boot(){
   const yRange=yrsAll.length?`${minY}–${maxY}`:'';
   document.getElementById('foot').innerHTML = nDest
     ? `${nTrips} trips · ${nDest} destinations · ${nCountries} countries${yRange?' · '+yRange:''}. ◉`
-    : `No trips logged yet — add rows to your sheet to populate this page.`;
+    : `No trips logged yet. Add rows to your sheet to populate this page.`;
   // Initial render: map is default
   refresh();
 }
 function countUp(){document.querySelectorAll('.stat .n').forEach(el=>{const to=+el.dataset.to;let c=0;const st=Math.max(1,Math.round(to/40));
   const t=setInterval(()=>{c+=st;if(c>=to){c=to;clearInterval(t)}el.textContent=c;},22);});}
 
-document.getElementById('q').oninput=e=>{filt.q=e.target.value.toLowerCase();refresh();};
+/* Search clear button. Kept in sync with programmatic writes to #q (pickArtist,
+   pickFriend, pickTag, Escape) — those set .value directly and fire no input event. */
+function _syncClear(){const q=document.getElementById('q'),c=document.getElementById('clearQ');
+  if(q&&c)c.classList.toggle('show',!!q.value);}
+function _clearSearch(){const q=document.getElementById('q');if(!q)return;
+  q.value='';filt.q='';_syncClear();refresh();q.focus();}
+document.getElementById('q').oninput=e=>{filt.q=e.target.value.toLowerCase();_syncClear();refresh();};
+document.getElementById('clearQ').onclick=_clearSearch;
 document.getElementById('orderBtn').onclick=function(){order=order==="desc"?"asc":"desc";
   this.textContent=order==="desc"?"▼ Newest":"▲ Oldest";renderTimeline();};
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>setView(t.dataset.view));
@@ -589,12 +599,12 @@ function renderTimeline(){
     g.querySelectorAll('.gthumb').forEach((th,i)=>th.onclick=()=>openLightbox(paths,i,cap));
   });
 }
-function pickFriend(name){filt.q=name.toLowerCase();document.getElementById('q').value=name;
+function pickFriend(name){filt.q=name.toLowerCase();document.getElementById('q').value=name;_syncClear();
   filt.country="ALL";filt.tag="ALL";
   document.querySelectorAll('#countryChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.co==="ALL"));
   document.querySelectorAll('#tagChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.tg==="ALL"));
   setView('timeline');refresh();window.scrollTo({top:document.querySelector('.controls').offsetTop,behavior:'smooth'});}
-function pickTag(t){filt.tag=t;filt.country="ALL";filt.q="";document.getElementById('q').value="";
+function pickTag(t){filt.tag=t;filt.country="ALL";filt.q="";document.getElementById('q').value="";_syncClear();
   document.querySelectorAll('#countryChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.co==="ALL"));
   document.querySelectorAll('#tagChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.tg===t));
   setView('timeline');refresh();window.scrollTo({top:document.querySelector('.controls').offsetTop,behavior:'smooth'});}
@@ -679,9 +689,9 @@ function buildStats(){
   const first=rowsSorted[0], last=rowsSorted[rowsSorted.length-1];
   const longest=[...groups].sort((a,b)=>b.span-a.span)[0];
   const highHtml=`
-    <div class="high"><div class="hl">First trip</div><div class="hn">${first?first.place:'—'}</div><div class="hs">${first?_formatRange(first.date_start,first.date_end||first.date_start):''}</div></div>
-    <div class="high"><div class="hl">Most recent</div><div class="hn">${last?last.place:'—'}</div><div class="hs">${last?_formatRange(last.date_start,last.date_end||last.date_start):''}</div></div>
-    <div class="high"><div class="hl">Longest trip</div><div class="hn">${longest?(longest.name||longest.stops[0].place):'—'}</div><div class="hs">${longest?longest.span+' days · '+longest.range:''}</div></div>`;
+    <div class="high"><div class="hl">First trip</div><div class="hn">${first?first.place:'none yet'}</div><div class="hs">${first?_formatRange(first.date_start,first.date_end||first.date_start):''}</div></div>
+    <div class="high"><div class="hl">Most recent</div><div class="hn">${last?last.place:'none yet'}</div><div class="hs">${last?_formatRange(last.date_start,last.date_end||last.date_start):''}</div></div>
+    <div class="high"><div class="hl">Longest trip</div><div class="hn">${longest?(longest.name||longest.stops[0].place):'none yet'}</div><div class="hs">${longest?longest.span+' days · '+longest.range:''}</div></div>`;
   document.getElementById('statsview').innerHTML=`
     <div class="panel"><h3>Highlights</h3><div class="high-row">${highHtml}</div></div>
     <div class="panel"><h3>Trips across the span · ${minY}–${maxY}</h3><div class="spanchart">${cols}</div></div>
@@ -715,7 +725,7 @@ document.addEventListener('keydown',e=>{
     else if(e.key==='ArrowLeft')_lbStep(-1);
     return;
   }
-  if(e.key==='Escape'){document.getElementById('q').value='';filt.q='';refresh();}
+  if(e.key==='Escape'){document.getElementById('q').value='';filt.q='';_syncClear();refresh();}
 });
 
 /* ---- INIT ---- */
