@@ -670,7 +670,7 @@ function buildStats(){
   const stc={}; rows.forEach(s=>stc[s.state]=(stc[s.state]||0)+1);
   const stmx=Math.max(1,...Object.values(stc));
   const stBars=Object.entries(stc).sort((a,b)=>b[1]-a[1]).map(([s,n])=>
-    `<div class="barrow"><div class="lab">${s}</div><div class="track"><div class="fill" data-w="${n/stmx*100}" style="background:${STCOL[s]}"></div></div><div class="v">${n}</div></div>`).join('');
+    `<div class="barrow"><div class="lab">${s}</div><div class="track"><div class="fill" data-w="${n/stmx*100}" style="background:${STCOL[s]||OTHER}"></div></div><div class="v">${n}</div></div>`).join('');
   // artists from filtered rows
   const am={}; rows.forEach(s=>s.artists.forEach(a=>{const o=am[a]=am[a]||{n:0,ys:new Set()};o.n++;o.ys.add(s.year);}));
   let arts=Object.entries(am).map(([a,o])=>({a,n:o.n,min:Math.min(...o.ys),max:Math.max(...o.ys)}));
