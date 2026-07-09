@@ -728,8 +728,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElement
 <!-- Floating now-playing module. Fixed bottom-right, collapsible, and it
      remembers its state so it stays shut once you close it. Starts collapsed on
      narrow screens so it never covers a timeline card. -->
-<div class="np" id="np" data-open="false">
-  <button class="np-pill" id="npPill" type="button" aria-expanded="false" aria-controls="npCard">
+<div class="np" id="np" data-open="true">
+  <button class="np-pill" id="npPill" type="button" aria-expanded="true" aria-controls="npCard">
     <span class="np-note" aria-hidden="true">&#9835;</span>
     <span class="np-pill-lab">Currently listening</span>
   </button>
@@ -753,13 +753,23 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElement
   const np=document.getElementById('np'), pill=document.getElementById('npPill'), close=document.getElementById('npClose');
   if(!np) return;
   const KEY='np-open';
+  // Storage may be unavailable entirely: with site data blocked, even reading
+  // the `localStorage` property throws SecurityError. Guard both directions the
+  // way the sheet and image caches above do, so the player still toggles — it
+  // just forgets the choice between loads.
+  const read=()=>{try{return localStorage.getItem(KEY);}catch(_){return null;}};
+  const write=(v)=>{try{localStorage.setItem(KEY,v);}catch(_){}};
+
   const narrow=window.matchMedia('(max-width:640px)').matches;
-  const saved=localStorage.getItem(KEY);
-  // Default: open on desktop, collapsed on mobile. A saved choice always wins.
   const set=(open)=>{np.dataset.open=open?'true':'false';pill.setAttribute('aria-expanded',open?'true':'false');};
+
+  // Handlers first: even if anything below misbehaves, the pill stays live.
+  pill.onclick=()=>{const open=np.dataset.open!=='true';set(open);write(String(open));};
+  close.onclick=()=>{set(false);write('false');};
+
+  // Default: open on desktop, collapsed on mobile. A saved choice always wins.
+  const saved=read();
   set(saved===null ? !narrow : saved==='true');
-  pill.onclick=()=>{const open=np.dataset.open!=='true';set(open);localStorage.setItem(KEY,String(open));};
-  close.onclick=()=>{set(false);localStorage.setItem(KEY,'false');};
 })();
 </script>
 </body>
