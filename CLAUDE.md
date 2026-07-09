@@ -28,17 +28,40 @@ The site is a **landing page plus five branches**. `/` is deliberately spare —
 - `src/pages/cooking.astro` — Fife Spice + Recipes cards, Austin restaurants, `@fifespice` socials. Routed at `/cooking/`.
 - `src/pages/writing.astro` — full Substack archive, fetched at build time. Routed at `/writing/`.
 - `src/pages/concert-log.astro` — "Live Events": tabbed (Music / Stand-Up / Football) timeline + Leaflet map + stats, plus the "Currently Listening To" embed. Routed at `/concert-log/`.
-- `src/pages/travel-log.astro` — map-first travel log, plus the "Snapshots" strip. Routed at `/travel-log/`. A sibling of concert-log; they share CSS variables, a CSV parser, the dark theme, person-avatars, and Leaflet setup.
+- `src/pages/travel-log.astro` — map-first travel log, plus the "Snapshots" strip. Routed at `/travel-log/`. A sibling of concert-log; they share CSS variables, a CSV parser, person-avatars, and Leaflet setup.
 
 The directory labels ("Travel", "Live") intentionally do **not** match their routes (`/travel-log/`, `/concert-log/`) — the URLs were kept to avoid breaking inbound links.
 
-### Two themes, deliberately
+## Brand — "The Operator"
 
-The four brand pages (`index`, `work`, `cooking`, `writing`) share `src/layouts/Base.astro`, which owns **"The Operator"** design tokens: burnt orange `#BF5700` on warm paper `#F6F4EF`, Archivo + Space Mono + Newsreader. Add a brand page by importing that layout; don't re-declare the tokens.
+`brand-guide-standalone.html` at the repo root is the source of truth: burnt orange `#BF5700` on warm paper `#F6F4EF`; **Archivo** (display / UI / body), **Space Mono** (labels, data, numerals), **Newsreader** (long-form / editorial prose only). Voice is plain and specific — "147 live shows. 42 venues. Still counting." — never "A Curated Collection Of My Thoughts."
 
-The two logs are **not** on that layout. They remain **faithful ports** of the original HTML: the entire original `<style>` and app `<script>` are wrapped in `is:inline`, so Astro emits them **verbatim** (no bundling, scoping, or minification), and they keep their own **dark theme** (`#18161d` + gold `#e9b14a`). So the site currently ships two visual identities. Reskinning the logs onto The Operator is open follow-up work, as is deduping them into `src/lib` + `src/components`.
+The four brand pages (`index`, `work`, `cooking`, `writing`) share `src/layouts/Base.astro`, which owns the tokens. Add a brand page by importing that layout; don't re-declare the tokens.
 
-Additions to the logs must therefore be written in *their* idiom, not the brand one — the Snapshots strip reuses travel-log's own `.gthumb` class and its global `openLightbox()` rather than shipping a second lightbox.
+The two logs are **not** on that layout — they remain faithful ports whose `<style>` and app `<script>` are `is:inline`, emitted verbatim (no bundling, scoping, or minification). They now carry the **same brand tokens**, redeclared in each file's own `:root`, with back-compat aliases (`--gold` → `--orange`, `--card` → `--white`, …) so the ported CSS keeps working. **Editing a token means editing it in three places**: `Base.astro` and both logs. Deduping them into `src/lib` + `src/components` is still open follow-up work.
+
+Additions to the logs should be written in *their* idiom — the Snapshots strip reuses travel-log's own `.gthumb` class and its global `openLightbox()` rather than shipping a second lightbox.
+
+### Data-viz colour rules (both logs)
+
+Categorical colour comes from a **fixed four-slot ramp**, declared as `--s1..--s4` in each log and validated with the `dataviz` skill's `validate_palette.js` against the paper surface (worst all-pairs CVD ΔE 14.4, every slot ≥ 3:1 contrast):
+
+| Slot | Hex | Concert (state) | Travel (continent) |
+|---|---|---|---|
+| 1 | `#BF5700` | Texas | North America |
+| 2 | `#009184` | Colorado | Europe |
+| 3 | `#6257C4` | Wyoming | Caribbean |
+| 4 | `#A32D5E` | Florida | Central America |
+| — | `#9C968A` | Other | Other |
+
+Rules, in order of how easy they are to break:
+
+- **Colour follows the entity, never its rank.** Filtering must never repaint the survivors. Both logs key colour off a literal map (`STCOL`, `CONT_COLOR`), not an index.
+- **Never generate a hue for a new category.** A fifth state or a country with no continent gets the neutral `Other` swatch — and `Other` must then appear in the legend. Travel deliberately colours by *continent*, not country: 20 countries is far past a readable legend.
+- **Magnitude bars are one hue** (`--orange`), flat, with a 4px rounded data-end at the baseline. No gradients.
+- `_colorFor()` in both logs generates an arbitrary hue for a person's initials circle. That is **identity, not a data encoding** — leave it alone; do not "fix" it into the series ramp.
+
+Basemap is CARTO **Positron** (`light_all`). Markers carry a 2px `#F6F4EF` ring so overlapping circles stay separable. The travel-log lightbox stays **dark on purpose** — it's a photo viewer.
 
 ## /work — what it may and may not say
 
