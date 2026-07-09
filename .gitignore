@@ -5,3 +5,25 @@
 node_modules/
 dist/
 .astro/
+
+# Local-only source material. None of it is read by the build.
+#
+# The resume the site actually serves is public/resume.pdf (tracked). These are
+# the editable originals — keep them out so an unrelated edit can't publish a
+# draft, or a version still carrying a phone number.
+Resume - Julian Fife.docx
+Resume - Julian Fife.pdf
+
+# Scratch export used to populate the concert Google Sheet. The site reads the
+# published sheet at runtime, never this file.
+concert-data-for-sheet.tsv
+
+# Substack's auto-generated social share cards (title, subtitle and excerpt are
+# burned into the image, with a Substack watermark). Not used on /writing.
+talarico assets/
+tanner assets/
+
+# Anything under public/ is copied verbatim into dist/ and served. This folder
+# holds social-media source files, not site assets — committing it would publish
+# them at julianfife.com/assets/…
+public/assets/
