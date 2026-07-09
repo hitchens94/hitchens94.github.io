@@ -75,7 +75,10 @@ body{background:var(--paper);color:var(--stone-700);font-family:var(--font-displ
 .controls{position:sticky;top:0;z-index:600;background:rgba(246,244,239,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:14px 0;margin-top:2px}
 .controls .row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .search{flex:1;min-width:200px;position:relative}
-.search input{width:100%;background:var(--card);border:1px solid var(--line);color:var(--ink);font-family:var(--font-display);font-size:16px;padding:11px 14px 11px 38px;border-radius:2px;outline:none}
+.search input{width:100%;background:var(--card);border:1px solid var(--line);color:var(--ink);font-family:var(--font-display);font-size:16px;padding:11px 36px 11px 38px;border-radius:2px;outline:none}
+.search .clearq{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:24px;height:24px;padding:0;border:none;background:transparent;color:var(--stone-400);font-family:var(--font-mono);font-size:16px;line-height:1;cursor:pointer;border-radius:50%;display:none;align-items:center;justify-content:center;transition:color .15s,background .15s}
+.search .clearq.show{display:flex}
+.search .clearq:hover{color:var(--orange);background:var(--stone-100)}
 .search input:focus{border-color:var(--gold)}
 .search::before{content:"⌕";position:absolute;left:12px;top:8px;font-size:19px;color:var(--muted)}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
@@ -167,10 +170,23 @@ body{background:var(--paper);color:var(--stone-700);font-family:var(--font-displ
 .artcard .an{font-family:var(--font-display);font-weight:600;font-size:15px;line-height:1.05}
 .artcard .ay{font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-top:2px}
 .artcard .ac{font-family:var(--font-mono);font-size:12px;color:var(--gold);font-weight:700;flex-shrink:0}
-/* now-playing embed (page-bottom, outside the timeline/map/stats tabs) */
-.nowplaying{margin-top:46px;padding-top:26px;border-top:1px solid var(--line)}
-.np-title{font-family:var(--font-display);font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
-.nowplaying iframe{border-radius:10px;max-width:420px;width:100%}
+/* Floating now-playing module: fixed bottom-right, collapses to a pill.
+   z-index sits under the lightbox (1500) but over the sticky controls (600).
+   Bottom offset clears Leaflet's attribution when the map is scrolled to the
+   bottom of the viewport. */
+.np{position:fixed;right:20px;bottom:20px;z-index:900;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.np-pill{display:inline-flex;align-items:center;gap:9px;padding:10px 16px;border:1px solid var(--line);border-radius:999px;background:var(--white);box-shadow:var(--shadow-md);cursor:pointer;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--stone-600);transition:color .16s,border-color .16s,transform .16s}
+.np-pill:hover{color:var(--orange);border-color:var(--stone-300);transform:translateY(-2px)}
+.np-note{color:var(--orange);font-size:13px;line-height:1}
+.np-card{width:340px;max-width:calc(100vw - 40px);background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg,10px);box-shadow:0 18px 40px -22px rgba(30,25,15,.4);overflow:hidden;transform-origin:bottom right;transition:opacity .18s,transform .18s}
+.np-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px 11px 15px;border-bottom:1px solid var(--line)}
+.np-title{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--orange)}
+.np-close{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;color:var(--stone-400);font-size:17px;line-height:1;cursor:pointer;border-radius:50%;transition:color .15s,background .15s}
+.np-close:hover{color:var(--orange);background:var(--stone-100)}
+.np-card iframe{display:block;width:100%;border:0}
+/* Collapsed: card hidden, pill shown. Open: the reverse. */
+.np[data-open="false"] .np-card{display:none}
+.np[data-open="true"] .np-pill{display:none}
 footer{border-top:1px solid var(--line);margin-top:40px;padding:30px 0 60px;font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:.08em}
 .empty{text-align:center;padding:70px 0;font-family:var(--font-mono);color:var(--muted)}
 @media(max-width:640px){
@@ -182,6 +198,8 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:30px 0 60px;font
   .catbtn{flex-direction:column;gap:3px;padding:11px 6px;font-size:14px}
   .catbtn .ct{font-size:10px}
   #map{height:440px}
+  .np{right:12px;bottom:12px}
+  .np-card{width:min(340px,calc(100vw - 24px))}
 }
 </style>
 </head>
@@ -203,7 +221,7 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:30px 0 60px;font
 <div class="wrap"><div class="stats" id="statstrip"></div></div>
 <div class="controls"><div class="wrap">
   <div class="row">
-    <div class="search"><input id="q" type="text" placeholder="Search artists, venues, tours, cities, friends…" autocomplete="off"></div>
+    <div class="search"><input id="q" type="text" placeholder="Search artists, venues, tours, cities, friends…" autocomplete="off"><button class="clearq" id="clearQ" type="button" aria-label="Clear search">×</button></div>
     <div class="chips" id="stateChips"></div>
     <div class="chips" id="typeChips"></div>
     <button class="chip" id="orderBtn">▼ Newest</button>
@@ -228,17 +246,6 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:30px 0 60px;font
     </div>
   </section>
   <section class="statsview" id="statsview"></section>
-  <section class="nowplaying">
-    <h2 class="np-title">Currently Listening To</h2>
-    <iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write"
-      frameborder="0"
-      height="175"
-      loading="lazy"
-      title="Currently listening to"
-      sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-      src="https://embed.music.apple.com/us/album/million-colors/1888209821?i=1888209822">
-    </iframe>
-  </section>
   <footer id="foot"></footer>
 </div>
 <script is:inline>
@@ -455,7 +462,7 @@ const CATS={
   standup:{types:['Stand-Up'],
     title:'Live',
     kicker:y=>`Stand-up shows I've been to · ${y}`,
-    sub:"Every set, every laugh. The comedians I've caught in person — from clubs to arenas.",
+    sub:"Every set, every laugh. The comedians I've caught in person, from clubs to arenas.",
     docTitle:'Live: A Stand-Up Log',
     spanLabel:'Sets across the span',
     buddiesLabel:'Comedy buddies'},
@@ -538,12 +545,19 @@ function applyCat(){
   const noun=_nounFor(filt.cat);
   document.getElementById('foot').innerHTML = uShows
     ? `${uShows} ${noun} · ${uArtists} ${actor.toLowerCase()} · ${uVenues} venues · ${minY}–${maxY}. ✦`
-    : `No ${noun} yet — add rows with type "${cfg.types.join(' / ')}" to the sheet.`;
+    : `No ${noun} yet. Add rows with type "${cfg.types.join(' / ')}" to the sheet.`;
   refresh();
 }
 function countUp(){document.querySelectorAll('.stat .n').forEach(el=>{const to=+el.dataset.to;let c=0;const st=Math.max(1,Math.round(to/40));
   const t=setInterval(()=>{c+=st;if(c>=to){c=to;clearInterval(t)}el.textContent=c;},22);});}
-document.getElementById('q').oninput=e=>{filt.q=e.target.value.toLowerCase();refresh();};
+/* Search clear button. Kept in sync with programmatic writes to #q (pickArtist,
+   pickFriend, pickTag, Escape) — those set .value directly and fire no input event. */
+function _syncClear(){const q=document.getElementById('q'),c=document.getElementById('clearQ');
+  if(q&&c)c.classList.toggle('show',!!q.value);}
+function _clearSearch(){const q=document.getElementById('q');if(!q)return;
+  q.value='';filt.q='';_syncClear();refresh();q.focus();}
+document.getElementById('q').oninput=e=>{filt.q=e.target.value.toLowerCase();_syncClear();refresh();};
+document.getElementById('clearQ').onclick=_clearSearch;
 document.getElementById('orderBtn').onclick=function(){order=order==="desc"?"asc":"desc";
   this.textContent=order==="desc"?"▼ Newest":"▲ Oldest";renderTimeline();};
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>setView(t.dataset.view));
@@ -620,7 +634,7 @@ function card(s){
     <div class="meta">${s.city}, <span class="st">${s.state}</span> · ${s.display}</div>
     ${s.tour?`<div class="tour">${s.tour}</div>`:''}${noteRow}${withRow}</div></div>`;
 }
-function pickArtist(name){filt.q=name.toLowerCase();document.getElementById('q').value=name;
+function pickArtist(name){filt.q=name.toLowerCase();document.getElementById('q').value=name;_syncClear();
   document.querySelectorAll('#stateChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.st==="ALL"));
   document.querySelectorAll('#typeChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.ty==="ALL"));
   filt.state="ALL";filt.type="ALL";setView('timeline');renderTimeline();window.scrollTo({top:document.querySelector('.controls').offsetTop,behavior:'smooth'});}
@@ -642,7 +656,7 @@ function renderMap(){
   rows.forEach(s=>{const v=agg[s.venue]=agg[s.venue]||{n:0,state:s.state,city:s.city,shows:[]};v.n++;v.shows.push(s);});
   const pts=[];
   Object.entries(agg).forEach(([name,v])=>{
-    const c=VENUES[name]; if(!c){console.warn('No map coordinates for venue:',name,'— add it to the VENUES map to give it a pin.');return;} pts.push(c);
+    const c=VENUES[name]; if(!c){console.warn('No map coordinates for venue:',name,'. Add it to the VENUES map to give it a pin.');return;} pts.push(c);
     const r=6+Math.sqrt(v.n)*4.2;
     // 2px paper ring separates overlapping markers on the light basemap.
     const m=L.circleMarker(c,{radius:r,color:'#F6F4EF',weight:2,opacity:.95,fillColor:STCOL[v.state]||OTHER,fillOpacity:.85});
@@ -700,7 +714,7 @@ function buildStats(){
     document.querySelectorAll('.barrow .fill').forEach(f=>f.style.width=f.dataset.w+'%');
   },60));
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElementById('q').value='';filt.q='';refresh();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElementById('q').value='';filt.q='';_syncClear();refresh();}});
 (async()=>{
   document.getElementById('timeline').innerHTML='<div class="empty">Loading shows…</div>';
   try{
@@ -709,6 +723,53 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElement
     else if(rows)console.warn('Concert sheet loaded but had no rows; using built-in list.');
   }catch(e){console.warn('Concert sheet load failed; using built-in list.',e);}
   boot();
+})();
+</script>
+<!-- Floating now-playing module. Fixed bottom-right, collapsible, and it
+     remembers its state so it stays shut once you close it. Starts collapsed on
+     narrow screens so it never covers a timeline card. -->
+<div class="np" id="np" data-open="true">
+  <button class="np-pill" id="npPill" type="button" aria-expanded="true" aria-controls="npCard">
+    <span class="np-note" aria-hidden="true">&#9835;</span>
+    <span class="np-pill-lab">Currently listening</span>
+  </button>
+  <div class="np-card" id="npCard">
+    <div class="np-head">
+      <span class="np-title">Currently Listening To</span>
+      <button class="np-close" id="npClose" type="button" aria-label="Collapse player">&minus;</button>
+    </div>
+    <iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write"
+      frameborder="0"
+      height="175"
+      loading="lazy"
+      title="Currently listening to"
+      sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+      src="https://embed.music.apple.com/us/album/million-colors/1888209821?i=1888209822">
+    </iframe>
+  </div>
+</div>
+<script is:inline>
+(function(){
+  const np=document.getElementById('np'), pill=document.getElementById('npPill'), close=document.getElementById('npClose');
+  if(!np) return;
+  const KEY='np-open';
+  // Storage may be unavailable entirely: with site data blocked, even reading
+  // the `localStorage` property throws SecurityError. Guard both directions the
+  // way the sheet and image caches above do, so the player still toggles — it
+  // just forgets the choice between loads.
+  const read=()=>{try{return localStorage.getItem(KEY);}catch(_){return null;}};
+  const write=(v)=>{try{localStorage.setItem(KEY,v);}catch(_){}};
+
+  const narrow=window.matchMedia('(max-width:640px)').matches;
+  const set=(open)=>{np.dataset.open=open?'true':'false';pill.setAttribute('aria-expanded',open?'true':'false');};
+
+  // Handlers first: even if anything below misbehaves, the pill stays live.
+  pill.onclick=()=>{const open=np.dataset.open!=='true';set(open);write(String(open));};
+  close.onclick=()=>{set(false);write('false');};
+
+  // Default: open on desktop, collapsed on mobile. A saved choice always wins.
+  const saved=read();
+  set(saved===null ? !narrow : saved==='true');
 })();
 </script>
 </body>

@@ -32,6 +32,17 @@ The site is a **landing page plus five branches**. `/` is deliberately spare —
 
 The directory labels ("Travel", "Live") intentionally do **not** match their routes (`/travel-log/`, `/concert-log/`) — the URLs were kept to avoid breaking inbound links.
 
+## Copy conventions
+
+**No em dashes in anything a visitor reads.** Not in prose, not in page `<title>`s, not in label separators, not as an empty-state glyph. This is a standing preference — a rewrite that reintroduces one is a regression.
+
+- Prose: split the sentence, or use a comma. "prospects — reading the filings" became "prospects. Reading public filings".
+- Titles and label separators: the mid-dot. `Work · Julian Fife`, `MBA · McCombs School of Business`.
+- Empty states: a word, not a glyph. Travel-log's stats highlights read `none yet`.
+- **En dashes stay** in numeric date ranges (`2001 – 2026`, `May 24 – Jun 2`), where they're typographically correct.
+
+Em dashes in *code comments* are fine — nobody reads those on a page. When auditing, check the rendered DOM with script/style excluded, not the source: both logs generate most of their text at runtime from JS, so a source grep misses it and a `dist/` grep misses it too.
+
 ## Brand — "The Operator"
 
 `brand-guide-standalone.html` at the repo root is the source of truth: burnt orange `#BF5700` on warm paper `#F6F4EF`; **Archivo** (display / UI / body), **Space Mono** (labels, data, numerals), **Newsreader** (long-form / editorial prose only). Voice is plain and specific — "147 live shows. 42 venues. Still counting." — never "A Curated Collection Of My Thoughts."
