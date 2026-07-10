@@ -1,6 +1,11 @@
 ---
 // /cooking — the cooking branch. Absorbs the homepage's Cooking cards, the
 // Favorite Austin Restaurants list, and the @fifespice socials.
+//
+// The Fife Spice site card is intentionally absent: fifespice.com is a work in
+// progress and Julian doesn't want it linked yet. The @fifespice social accounts
+// stay. Restore the card (and the "Where I write about it" heading) when the
+// site is ready; /fife-spice-logo.png is still in public/ for that.
 import Base from "../layouts/Base.astro";
 
 const restaurants = [
@@ -15,16 +20,11 @@ const restaurants = [
 <Base
   title="Cooking · Julian Fife"
   heading="Cooking"
-  tagline="I cook most nights. Fife Spice is where I write it down; the rest is where I eat when I don't feel like it."
+  tagline="I cook most nights. Here's the running list of what I make, and where I eat when I don't feel like cooking."
 >
   <div class="section">
-    <p class="section-label">Where I write about it</p>
-    <div class="cards">
-      <a href="https://fifespice.com" target="_blank" rel="noopener noreferrer" class="big-link cooking-card">
-        <img class="cooking-logo" src="/fife-spice-logo.png" alt="Fife Spice" loading="lazy">
-        <span class="title">Fife Spice <span class="arrow">&rarr;</span></span>
-        <span class="sub">Recipes, technique, and what I'm making</span>
-      </a>
+    <p class="section-label">Recipes</p>
+    <div class="cards cards-one">
       <a href="https://recipeats.julianfife.com" target="_blank" rel="noopener noreferrer" class="big-link cooking-card">
         <img class="cooking-logo" src="/recipeats-logo.png" alt="Recipeats" loading="lazy">
         <span class="title">Recipes <span class="arrow">&rarr;</span></span>
@@ -56,6 +56,8 @@ const restaurants = [
   </div>
 
   <style>
+    /* One card, so it spans rather than stranding an empty column. */
+    .cards-one { grid-template-columns: 1fr; }
     .cooking-card .cooking-logo {
       height: 52px; width: auto; display: block;
       margin-bottom: 12px; border-radius: var(--r-md);
