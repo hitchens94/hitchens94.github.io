@@ -32,9 +32,9 @@ function summarize(html, max = 180) {
 }
 
 let posts = [
-  { title: "Grain to Ghost", url: "https://julianfife.substack.com/p/grain-to-ghost", year: "2026", blurb: "" },
-  { title: "Tanner", url: "https://julianfife.substack.com/p/tanner", year: "2026", blurb: "" },
-  { title: "James Talarico Is Texas", url: "https://julianfife.substack.com/p/james-talarico-is-texas", year: "2026", blurb: "" },
+  { title: "Grain to Ghost", url: "https://julianfife.substack.com/p/grain-to-ghost", date: "Aug 2026", blurb: "" },
+  { title: "Tanner", url: "https://julianfife.substack.com/p/tanner", date: "Mar 2026", blurb: "" },
+  { title: "James Talarico Is Texas", url: "https://julianfife.substack.com/p/james-talarico-is-texas", date: "Feb 2026", blurb: "" },
 ];
 
 const rss = await fetchText(SUBSTACK_RSS);
@@ -43,11 +43,12 @@ if (rss) {
   const parsed = items.map(it => {
     const title = (it.match(/<title>([\s\S]*?)<\/title>/) || [])[1];
     const link = (it.match(/<link>([\s\S]*?)<\/link>/) || [])[1];
-    const date = (it.match(/<pubDate>([\s\S]*?)<\/pubDate>/) || [])[1] || "";
-    const year = (date.match(/\b(20\d{2})\b/) || [])[1] || "";
+    const pub = (it.match(/<pubDate>([\s\S]*?)<\/pubDate>/) || [])[1] || "";
+    const stamp = pub.match(/\b([A-Z][a-z]{2}) (20\d{2})\b/);
+    const date = stamp ? `${stamp[1]} ${stamp[2]}` : (pub.match(/\b20\d{2}\b/) || [""])[0];
     const desc = (it.match(/<description>([\s\S]*?)<\/description>/) || [])[1] || "";
     return title && link
-      ? { title: decode(title), url: decode(link), year, blurb: summarize(desc) }
+      ? { title: decode(title), url: decode(link), date, blurb: summarize(desc) }
       : null;
   }).filter(Boolean);
   if (parsed.length) posts = parsed;
@@ -65,7 +66,7 @@ if (rss) {
       {posts.map(p => (
         <li>
           <a href={p.url} target="_blank" rel="noopener noreferrer">
-            <span class="w-year">{p.year}</span>
+            <span class="w-date">{p.date}</span>
             <span class="w-body">
               <span class="w-title">{p.title}</span>
               {p.blurb && <span class="w-blurb">{p.blurb}</span>}
@@ -84,12 +85,12 @@ if (rss) {
     .writing-list li { border-bottom: 1px solid var(--stone-200); }
     .writing-list li:last-child { border-bottom: none; }
     .writing-list a {
-      display: grid; grid-template-columns: 3.6rem 1fr; gap: 16px;
+      display: grid; grid-template-columns: 5.2rem 1fr; gap: 16px;
       align-items: baseline; padding: 18px 2px;
       transition: padding-left 0.16s var(--ease);
     }
     .writing-list a:hover { text-decoration: none; padding-left: 6px; }
-    .w-year {
+    .w-date {
       font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700;
       color: var(--stone-600);
     }
